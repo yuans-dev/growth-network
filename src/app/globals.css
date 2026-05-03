@@ -1,26 +1,163 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg-base: #0a0a0a;
+  --color-bg-surface: #111111;
+  --color-bg-card: #1a1a1a;
+  --color-bg-elevated: #222222;
+  --color-accent: #e8a020;
+  --color-accent-glow-sm: rgba(232, 160, 32, 0.3);
+  --color-accent-glow-lg: rgba(232, 160, 32, 0.4);
+  --color-accent-tint-10: rgba(232, 160, 32, 0.1);
+  --color-accent-tint-15: rgba(232, 160, 32, 0.15);
+  --color-accent-border: rgba(232, 160, 32, 0.3);
+  --color-border: #2a2a2a;
+  --color-border-input: #333333;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #cccccc;
+  --color-text-muted: #888888;
+  --color-text-label: #e8a020;
+  --color-text-on-accent: #0a0a0a;
+  --color-nav-bg: rgba(10, 10, 10, 0.95);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--color-bg-base);
+  --color-foreground: var(--color-text-primary);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-barlow-condensed);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family:
+    var(--font-sans),
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), "Barlow Condensed", system-ui, sans-serif;
+}
+
+.gn-hero {
+  background-color: var(--color-bg-base);
+  background-image:
+    radial-gradient(
+      600px 400px at 20% 50%,
+      rgba(232, 160, 32, 0.15),
+      transparent 70%
+    ),
+    radial-gradient(
+      520px 360px at 80% 30%,
+      rgba(232, 160, 32, 0.1),
+      transparent 70%
+    ),
+    radial-gradient(
+      420px 320px at 50% 80%,
+      rgba(232, 160, 32, 0.08),
+      transparent 70%
+    ),
+    radial-gradient(
+      transparent 0%,
+      rgba(10, 10, 10, 0.6) 60%,
+      rgba(10, 10, 10, 0.85) 100%
+    );
+}
+
+.gn-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.gn-overline {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-text-label);
+}
+
+.gn-overline::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: var(--color-accent);
+}
+
+.gn-card {
+  background: var(--color-bg-card);
+  border-width: 2px 1px 1px;
+  border-style: solid;
+  border-color: var(--color-accent) var(--color-border) var(--color-border);
+  border-radius: 4px;
+  padding: 28px;
+}
+
+.gn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: var(--color-accent-tint-10);
+  border: 1px solid var(--color-accent-border);
+  color: var(--color-text-label);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.gn-input {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-input);
+  color: var(--color-text-primary);
+  border-radius: 4px;
+  padding: 16px 20px;
+  font-size: 15px;
+  width: 100%;
+}
+
+.gn-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.gn-btn-primary {
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 20px 40px;
+  border-radius: 6px;
+  box-shadow: 0 0 20px var(--color-accent-glow-sm);
+  transition: opacity 150ms ease;
+}
+
+.gn-btn-primary:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 30px var(--color-accent-glow-lg);
+}
+
+.gn-btn-secondary {
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 12px 32px;
+  border-radius: 4px;
 }
