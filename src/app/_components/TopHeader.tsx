@@ -30,9 +30,7 @@ export default function TopHeader() {
             <p className="text-sm font-semibold text-[var(--color-ink)]">
               Growth Network
             </p>
-            <p className="text-xs text-[var(--color-muted)]">
-              by Exoasia
-            </p>
+            <p className="text-xs text-[var(--color-muted)]">by Exoasia</p>
           </div>
         </Link>
 
@@ -62,8 +60,8 @@ export default function TopHeader() {
               </Link>
               <button
                 type="button"
-                onClick={() => {
-                  signOut();
+                onClick={async () => {
+                  await signOut();
                   router.push("/");
                 }}
                 className="rounded-full bg-[var(--color-ink)] px-6 py-2 text-sm font-600 text-white hover:bg-[var(--color-body)]"

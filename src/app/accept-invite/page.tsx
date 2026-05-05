@@ -25,10 +25,10 @@ export default function AcceptInvitePage() {
       formData.pdpaConsent &&
       formData.ndaLight &&
       formData.nonCircumvention,
-    [formData]
+    [formData],
   );
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!signedIn || !isInvitedAccount) {
       setError("You do not have a pending invite to claim.");
@@ -38,7 +38,14 @@ export default function AcceptInvitePage() {
       setError("Passwords do not match.");
       return;
     }
-    completeInviteClaim({ name: formData.fullName.trim() });
+    const { error: updateError } = await completeInviteClaim({
+      name: formData.fullName.trim(),
+      password: formData.password,
+    });
+    if (updateError) {
+      setError(updateError);
+      return;
+    }
     router.push("/dashboard");
   };
 
@@ -48,23 +55,34 @@ export default function AcceptInvitePage() {
         <p className="text-xs font-600 uppercase tracking-[0.14em] text-[var(--color-muted)]">
           Invitation Claim
         </p>
-        <h1 className="mt-3 text-3xl font-700 text-[var(--color-ink)]">Activate your invited account</h1>
+        <h1 className="mt-3 text-3xl font-700 text-[var(--color-ink)]">
+          Activate your invited account
+        </h1>
         <p className="mt-2 text-sm text-[var(--color-body)]">
           {user?.email
             ? `Invitee email: ${user.email}`
             : "Sign in with your invited email to claim access."}
         </p>
 
-        {error && <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {error && (
+          <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-600 text-[var(--color-ink)]">Full name</label>
+            <label className="block text-sm font-600 text-[var(--color-ink)]">
+              Full name
+            </label>
             <input
               value={formData.fullName}
               onChange={(event) => {
                 setError("");
-                setFormData((prev) => ({ ...prev, fullName: event.target.value }));
+                setFormData((prev) => ({
+                  ...prev,
+                  fullName: event.target.value,
+                }));
               }}
               className="mt-1 w-full rounded-lg border border-[var(--color-hairline)] px-4 py-3"
               placeholder="Your full name"
@@ -72,26 +90,36 @@ export default function AcceptInvitePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">Password</label>
+              <label className="block text-sm font-600 text-[var(--color-ink)]">
+                Password
+              </label>
               <input
                 type="password"
                 value={formData.password}
                 onChange={(event) => {
                   setError("");
-                  setFormData((prev) => ({ ...prev, password: event.target.value }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    password: event.target.value,
+                  }));
                 }}
                 className="mt-1 w-full rounded-lg border border-[var(--color-hairline)] px-4 py-3"
                 placeholder="Create password"
               />
             </div>
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">Confirm password</label>
+              <label className="block text-sm font-600 text-[var(--color-ink)]">
+                Confirm password
+              </label>
               <input
                 type="password"
                 value={formData.confirmPassword}
                 onChange={(event) => {
                   setError("");
-                  setFormData((prev) => ({ ...prev, confirmPassword: event.target.value }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    confirmPassword: event.target.value,
+                  }));
                 }}
                 className="mt-1 w-full rounded-lg border border-[var(--color-hairline)] px-4 py-3"
                 placeholder="Confirm password"
@@ -104,7 +132,12 @@ export default function AcceptInvitePage() {
               <input
                 type="checkbox"
                 checked={formData.pdpaConsent}
-                onChange={(event) => setFormData((prev) => ({ ...prev, pdpaConsent: event.target.checked }))}
+                onChange={(event) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    pdpaConsent: event.target.checked,
+                  }))
+                }
                 className="mt-1"
               />
               <span>I consent to PDPA-PH data handling terms.</span>
@@ -113,7 +146,12 @@ export default function AcceptInvitePage() {
               <input
                 type="checkbox"
                 checked={formData.ndaLight}
-                onChange={(event) => setFormData((prev) => ({ ...prev, ndaLight: event.target.checked }))}
+                onChange={(event) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    ndaLight: event.target.checked,
+                  }))
+                }
                 className="mt-1"
               />
               <span>I accept the NDA-light agreement.</span>
@@ -123,7 +161,10 @@ export default function AcceptInvitePage() {
                 type="checkbox"
                 checked={formData.nonCircumvention}
                 onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, nonCircumvention: event.target.checked }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    nonCircumvention: event.target.checked,
+                  }))
                 }
                 className="mt-1"
               />

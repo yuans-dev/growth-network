@@ -5,43 +5,41 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./providers";
 
-const PREDEFINED_INVITED_ACCOUNTS: Record<string, { role: "Explorer" | "Growth Partner" | "Community Builder" | "Growth Advisor" }> = {
-  "invitee@growthnetwork.ph": { role: "Growth Partner" },
-  "advisor-invite@growthnetwork.ph": { role: "Growth Advisor" },
-  "builder-invite@growthnetwork.ph": { role: "Community Builder" },
-};
-
 export default function Home() {
   const router = useRouter();
-  const { signedIn, signIn, user, isInvitedAccount } = useAuth();
+  const { signedIn, signInWithPassword, user, isInvitedAccount } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login check
-    if (loginData.email && loginData.password) {
-      const normalizedEmail = loginData.email.trim().toLowerCase();
-      const invitedAccount = PREDEFINED_INVITED_ACCOUNTS[normalizedEmail];
-      if (invitedAccount) {
-        signIn({
-          email: normalizedEmail,
-          role: invitedAccount.role,
-          accountStatus: "invited",
-        });
-        router.push("/accept-invite");
-      } else {
-        signIn({ email: normalizedEmail, accountStatus: "active" });
-        router.push("/dashboard");
-      }
-    } else {
+    if (!loginData.email || !loginData.password) {
       setLoginError("Please enter your email and password");
+      return;
     }
+
+    setIsSubmitting(true);
+    const normalizedEmail = loginData.email.trim().toLowerCase();
+    const { error, user: signedInUser } = await signInWithPassword(
+      normalizedEmail,
+      loginData.password,
+    );
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setLoginError(error);
+      return;
+    }
+
+    const accountStatus = signedInUser?.user_metadata?.account_status;
+    router.push(accountStatus === "invited" ? "/accept-invite" : "/dashboard");
   };
 
   const handleLoginInputChange = (field: string, value: string) => {
-    setLoginData(prev => ({ ...prev, [field]: value }));
+    setLoginData((prev) => ({ ...prev, [field]: value }));
     if (loginError) setLoginError("");
   };
 
@@ -55,11 +53,16 @@ export default function Home() {
                 Welcome back{user?.email ? `, ${user.email}` : ""}
               </h1>
               <p className="mt-4 text-lg text-[var(--color-body)]">
-                You're already signed in for testing. Use the header links to navigate to dashboard and other pages.
+                You're already signed in for testing. Use the header links to
+                navigate to dashboard and other pages.
               </p>
               <button
                 type="button"
-                onClick={() => router.push(isInvitedAccount ? "/accept-invite" : "/dashboard")}
+                onClick={() =>
+                  router.push(
+                    isInvitedAccount ? "/accept-invite" : "/dashboard",
+                  )
+                }
                 className="gn-btn-primary"
               >
                 {isInvitedAccount ? "Complete Invite Claim" : "Go to Dashboard"}
@@ -69,22 +72,40 @@ export default function Home() {
                   Quick access
                 </p>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <Link href="/dashboard" className="gn-btn-secondary w-full text-center">
+                  <Link
+                    href="/dashboard"
+                    className="gn-btn-secondary w-full text-center"
+                  >
                     Dashboard
                   </Link>
-                  <Link href="/matches" className="gn-btn-secondary w-full text-center">
+                  <Link
+                    href="/matches"
+                    className="gn-btn-secondary w-full text-center"
+                  >
                     Matches
                   </Link>
-                  <Link href="/deal-board" className="gn-btn-secondary w-full text-center">
+                  <Link
+                    href="/deal-board"
+                    className="gn-btn-secondary w-full text-center"
+                  >
                     Deal Board
                   </Link>
-                  <Link href="/events" className="gn-btn-secondary w-full text-center">
+                  <Link
+                    href="/events"
+                    className="gn-btn-secondary w-full text-center"
+                  >
                     Events
                   </Link>
-                  <Link href="/documents" className="gn-btn-secondary w-full text-center">
+                  <Link
+                    href="/documents"
+                    className="gn-btn-secondary w-full text-center"
+                  >
                     Documents
                   </Link>
-                  <Link href="/profile" className="gn-btn-secondary w-full text-center">
+                  <Link
+                    href="/profile"
+                    className="gn-btn-secondary w-full text-center"
+                  >
                     Profile
                   </Link>
                 </div>
@@ -114,7 +135,9 @@ export default function Home() {
                     type="email"
                     placeholder="Email address"
                     value={loginData.email}
-                    onChange={(e) => handleLoginInputChange("email", e.target.value)}
+                    onChange={(e) =>
+                      handleLoginInputChange("email", e.target.value)
+                    }
                     required
                   />
                   <input
@@ -122,13 +145,19 @@ export default function Home() {
                     type="password"
                     placeholder="Password"
                     value={loginData.password}
-                    onChange={(e) => handleLoginInputChange("password", e.target.value)}
+                    onChange={(e) =>
+                      handleLoginInputChange("password", e.target.value)
+                    }
                     required
                   />
                 </div>
 
-                <button className="w-full gn-btn-primary" type="submit">
-                  Sign in →
+                <button
+                  className="w-full gn-btn-primary"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Signing in..." : "Sign in →"}
                 </button>
               </form>
 
@@ -180,16 +209,15 @@ export default function Home() {
                 </h3>
                 <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
                   <li>• Invitation-only membership</li>
-                  <li>• Invited accounts must claim access before activation</li>
+                  <li>
+                    • Invited accounts must claim access before activation
+                  </li>
                   <li>• Stage-based progression (1→2→3→4)</li>
                   <li>• Credit-based matching system</li>
                   <li>• Advisor-reviewed introductions</li>
                   <li>• Document verification required</li>
                 </ul>
               </div>
-              <p className="text-xs text-[var(--color-muted)]">
-                Demo invited emails: invitee@growthnetwork.ph, advisor-invite@growthnetwork.ph, builder-invite@growthnetwork.ph
-              </p>
             </div>
           )}
         </div>

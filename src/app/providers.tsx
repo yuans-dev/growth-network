@@ -1,81 +1,110 @@
 "use client";
 
+import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-type User = {
-  email: string;
-  name?: string;
-  role?: "Explorer" | "Growth Partner" | "Community Builder" | "Growth Advisor";
-  accountStatus: "invited" | "active";
-};
+import { createClient } from "@/lib/supabase/client";
 
 type AuthContextType = {
   user: User | null;
+  session: Session | null;
   signedIn: boolean;
   isInvitedAccount: boolean;
-  signIn: (user: User) => void;
-  signOut: () => void;
-  completeInviteClaim: (details: { name: string }) => void;
+  isLoading: boolean;
+  signInWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{
+    error: string | null;
+    session: Session | null;
+    user: User | null;
+  }>;
+  signOut: () => Promise<void>;
+  completeInviteClaim: (details: {
+    name: string;
+    password: string;
+  }) => Promise<{ error: string | null }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const AUTH_KEY = "gn_mock_user";
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem(AUTH_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Partial<User>;
-        if (parsed.email) {
-          setUser({
-            email: parsed.email,
-            name: parsed.name,
-            role: parsed.role,
-            accountStatus: parsed.accountStatus ?? "active",
-          });
-        } else {
-          localStorage.removeItem(AUTH_KEY);
-        }
-      } catch {
-        localStorage.removeItem(AUTH_KEY);
+    let isMounted = true;
+
+    const fetchSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      if (error) {
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+        return;
       }
-    }
-    setIsHydrated(true);
-  }, []);
+      setSession(data.session ?? null);
+      setUser(data.session?.user ?? null);
+      setIsLoading(false);
+    };
+
+    fetchSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   const value = useMemo(
     () => ({
       user,
+      session,
       signedIn: !!user,
-      isInvitedAccount: user?.accountStatus === "invited",
-      signIn: (nextUser: User) => {
-        setUser(nextUser);
-        localStorage.setItem(AUTH_KEY, JSON.stringify(nextUser));
-      },
-      signOut: () => {
-        setUser(null);
-        localStorage.removeItem(AUTH_KEY);
-      },
-      completeInviteClaim: ({ name }: { name: string }) => {
-        if (!user) return;
-        const updatedUser: User = {
-          ...user,
-          name,
-          accountStatus: "active",
+      isInvitedAccount: user?.user_metadata?.account_status === "invited",
+      isLoading,
+      signInWithPassword: async (email: string, password: string) => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        return {
+          error: error?.message ?? null,
+          session: data.session ?? null,
+          user: data.user ?? null,
         };
-        setUser(updatedUser);
-        localStorage.setItem(AUTH_KEY, JSON.stringify(updatedUser));
+      },
+      signOut: async () => {
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+      },
+      completeInviteClaim: async ({ name, password }) => {
+        const { error } = await supabase.auth.updateUser({
+          password,
+          data: {
+            full_name: name,
+            account_status: "active",
+          },
+        });
+
+        return { error: error?.message ?? null };
       },
     }),
-    [user]
+    [isLoading, session, supabase, user],
   );
 
-  // Don't render children until hydration is complete to avoid mismatch
-  if (!isHydrated) {
+  if (isLoading) {
     return null;
   }
 

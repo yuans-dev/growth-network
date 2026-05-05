@@ -22,11 +22,14 @@ const PROTECTED_PATH_PREFIXES = [
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { signedIn, isInvitedAccount } = useAuth();
+  const { signedIn, isInvitedAccount, isLoading } = useAuth();
 
   useEffect(() => {
+    if (isLoading) return;
     const isPublicPath = PUBLIC_PATHS.includes(pathname);
-    const isProtectedPath = PROTECTED_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    const isProtectedPath = PROTECTED_PATH_PREFIXES.some((prefix) =>
+      pathname.startsWith(prefix),
+    );
 
     if (!signedIn && isProtectedPath) {
       router.replace("/");
@@ -46,7 +49,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     if (!signedIn && !isPublicPath) {
       router.replace("/");
     }
-  }, [signedIn, isInvitedAccount, pathname, router]);
+  }, [signedIn, isInvitedAccount, pathname, router, isLoading]);
 
   return <>{children}</>;
 }
