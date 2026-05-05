@@ -9,65 +9,89 @@ const dealsByStage = {
       id: "deal-1",
       dealName: "Meridian x TechFlow",
       fitScore: 91,
-      lastActivity: "2 days ago",
+      confidence: "High",
+      impactProjection: "PHP 4.8M annual revenue upside",
+      daysSinceUpdate: 2,
       nextStep: "Schedule discovery call",
       nextStepDue: "2024-05-20",
-      isStaleFlagged: false,
     },
   ],
-  "Intro": [
+  "Intro & Scoping": [
     {
       id: "deal-2",
       dealName: "Vanta x TechFlow",
       fitScore: 86,
-      lastActivity: "5 days ago",
+      confidence: "Medium",
+      impactProjection: "15% logistics cost reduction",
+      daysSinceUpdate: 8,
       nextStep: "Follow up with Vanta on discovery call",
       nextStepDue: "2024-05-15",
-      isStaleFlagged: true,
     },
   ],
-  "Proposal": [
+  "Proposal/Pilot": [
     {
       id: "deal-3",
       dealName: "Helix x TechFlow",
       fitScore: 82,
-      lastActivity: "1 day ago",
+      confidence: "High",
+      impactProjection: "Pilot target: 80% payroll error reduction",
+      daysSinceUpdate: 1,
       nextStep: "Send revised proposal",
       nextStepDue: "2024-05-18",
-      isStaleFlagged: false,
     },
   ],
-  "Negotiation": [
+  "Negotiation/Legal": [
     {
       id: "deal-4",
       dealName: "CloudCore x TechFlow",
       fitScore: 78,
-      lastActivity: "3 days ago",
+      confidence: "Medium",
+      impactProjection: "PHP 1.9M annual cost avoidance",
+      daysSinceUpdate: 15,
       nextStep: "Review redlined terms",
       nextStepDue: "2024-05-19",
-      isStaleFlagged: true,
     },
   ],
-  "Closed": [
+  "Closed-Won": [
     {
       id: "deal-5",
       dealName: "Nexus x TechFlow",
       fitScore: 88,
-      lastActivity: "1 week ago",
+      confidence: "High",
+      impactProjection: "Signed: PHP 2.7M yearly contract value",
+      daysSinceUpdate: 7,
       nextStep: null,
       nextStepDue: null,
-      isStaleFlagged: false,
+    },
+  ],
+  "Closed-Lost": [
+    {
+      id: "deal-6",
+      dealName: "Ardent x TechFlow",
+      fitScore: 74,
+      confidence: "Low",
+      impactProjection: "No realized impact",
+      daysSinceUpdate: 4,
+      nextStep: null,
+      nextStepDue: null,
+      closeReasonCode: "Budget freeze at buyer side",
     },
   ],
 };
 
 export default function DealBoardPage() {
-  const handleMoveCard = (dealId: string, fromStage: string, toStage: string) => {
-    console.log("move-deal", { dealId, fromStage, toStage });
-  };
-
   const handleUpdateDeal = (dealId: string) => {
     console.log("update-deal", dealId);
+  };
+
+  const getStaleState = (stage: string, daysSinceUpdate: number) => {
+    if (stage === "Negotiation/Legal" && daysSinceUpdate >= 14) {
+      return { isStale: true, label: "Escalation (14+ days in Negotiation/Legal)" };
+    }
+    if (daysSinceUpdate >= 7) {
+      return { isStale: true, label: "Stale (7+ days without update)" };
+    }
+    return { isStale: false, label: "Fresh" };
   };
 
   return (
@@ -113,10 +137,13 @@ export default function DealBoardPage() {
                 {/* Cards */}
                 <div className="space-y-3 p-4">
                   {dealsByStage[stage as keyof typeof dealsByStage]?.map((deal) => (
+                    (() => {
+                      const staleState = getStaleState(stage, deal.daysSinceUpdate);
+                      return (
                     <div
                       key={deal.id}
                       className={`rounded-lg border p-4 cursor-pointer hover:shadow-md transition-all ${
-                        deal.isStaleFlagged
+                        staleState.isStale
                           ? 'border-orange-300 bg-orange-50'
                           : 'border-[var(--color-hairline)] bg-[var(--color-canvas)]'
                       }`}
@@ -126,7 +153,7 @@ export default function DealBoardPage() {
                         <h3 className="font-600 text-[var(--color-ink)] text-sm">
                           {deal.dealName}
                         </h3>
-                        {deal.isStaleFlagged && (
+                        {staleState.isStale && (
                           <span className="text-lg">⚠️</span>
                         )}
                       </div>
@@ -137,9 +164,20 @@ export default function DealBoardPage() {
                           📊 {deal.fitScore} fit
                         </span>
                         <span className="rounded-full bg-[var(--color-surface-soft)] px-2 py-1">
-                          ⏱️ {deal.lastActivity}
+                          ⏱️ {deal.daysSinceUpdate} days since update
+                        </span>
+                        <span className="rounded-full bg-[var(--color-surface-soft)] px-2 py-1">
+                          ✅ {deal.confidence} confidence
                         </span>
                       </div>
+                      <p className="mt-2 text-xs text-[var(--color-body)]">
+                        Impact: {deal.impactProjection}
+                      </p>
+                      {staleState.isStale && (
+                        <p className="mt-2 text-xs font-600 text-orange-800">
+                          {staleState.label}
+                        </p>
+                      )}
 
                       {/* Next Step */}
                       {deal.nextStep && (
@@ -158,6 +196,12 @@ export default function DealBoardPage() {
                         </div>
                       )}
 
+                      {stage === "Closed-Lost" && "closeReasonCode" in deal && (
+                        <p className="mt-2 text-xs text-[var(--color-body)]">
+                          Reason code: {deal.closeReasonCode}
+                        </p>
+                      )}
+
                       {/* Action Button */}
                       <button
                         onClick={() => handleUpdateDeal(deal.id)}
@@ -166,6 +210,8 @@ export default function DealBoardPage() {
                         Update
                       </button>
                     </div>
+                    );
+                    })()
                   ))}
 
                   {(!dealsByStage[stage as keyof typeof dealsByStage] ||
@@ -189,9 +235,10 @@ export default function DealBoardPage() {
           </p>
           <ul className="mt-4 space-y-3 text-sm text-[var(--color-body)]">
             <li>• <strong>Update every 7 days</strong> or your deal will be flagged as stale</li>
+            <li>• <strong>Negotiation/Legal cards</strong> with 14+ days inactivity are escalated</li>
             <li>• <strong>Move cards forward</strong> when stage criteria are met</li>
-            <li>• <strong>Set next steps</strong> with clear due dates</li>
-            <li>• <strong>Advisor review</strong> required before moving to Closed</li>
+            <li>• <strong>Set next steps</strong> with clear due dates and owners</li>
+            <li>• <strong>Closed-Lost cards</strong> require reason codes before archive</li>
           </ul>
         </div>
       </section>

@@ -1,5 +1,30 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
+const roleCapabilities = {
+  Explorer: [
+    "Discover aligned opportunities",
+    "Attend weekly sessions",
+    "View profile and stage requirements",
+  ],
+  "Growth Partner": [
+    "Participate in deal conversations",
+    "Access match cycle outputs",
+    "Update active deal cards",
+  ],
+  "Community Builder": [
+    "Host chapter events",
+    "Invite aligned members",
+    "View chapter engagement digest",
+  ],
+  "Growth Advisor": [
+    "Review KYC and risk classification",
+    "Approve/decline introductions",
+    "Confirm key deal stage transitions",
+  ],
+} as const;
+
 const matchCards = [
   {
     id: "match-1",
@@ -30,20 +55,24 @@ const dealBoard = [
     deals: ["Meridian x Aera", "Vanta x Helix"],
   },
   {
-    stage: "Intro",
+    stage: "Intro & Scoping",
     deals: ["Kinetic x Cobalt"],
   },
   {
-    stage: "Proposal",
+    stage: "Proposal/Pilot",
     deals: ["Ardent x Mosaic"],
   },
   {
-    stage: "Negotiation",
+    stage: "Negotiation/Legal",
     deals: ["Lumen x Forge"],
   },
   {
-    stage: "Closed",
+    stage: "Closed-Won",
     deals: ["Axis x Northline"],
+  },
+  {
+    stage: "Closed-Lost",
+    deals: ["Orbit x Delta"],
   },
 ];
 
@@ -54,6 +83,10 @@ const events = [
 ];
 
 export default function DashboardPage() {
+  const [activeRole, setActiveRole] = useState<keyof typeof roleCapabilities>("Growth Partner");
+
+  const roleSummary = useMemo(() => roleCapabilities[activeRole], [activeRole]);
+
   const handleRequestIntro = (matchId: string) => {
     console.log("dashboard-request-intro", matchId);
   };
@@ -67,8 +100,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="px-[5%] py-20">
-      <div className="mx-auto w-full max-w-[1280px]">
+    <div className="px-[5%] py-20 overflow-x-hidden">
+      <div className="mx-auto w-full max-w-[1280px] overflow-hidden">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="gn-overline">Member portal</p>
@@ -109,10 +142,40 @@ export default function DashboardPage() {
         </div>
 
         <section className="mt-16 overflow-hidden">
+          <p className="gn-overline">Role-based access</p>
+          <div className="mt-8 rounded-[4px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6">
+            <p className="text-[13px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
+              Current role
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {Object.keys(roleCapabilities).map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setActiveRole(role as keyof typeof roleCapabilities)}
+                  className={`rounded-full border px-4 py-2 text-[12px] uppercase tracking-[0.1em] ${
+                    role === activeRole
+                      ? "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-text-on-accent)]"
+                      : "border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-text-label)]"
+                  }`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
+            <ul className="mt-5 space-y-2 text-[14px] text-[var(--color-text-secondary)]">
+              {roleSummary.map((item) => (
+                <li key={item}>- {item}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="mt-16 overflow-hidden">
           <p className="gn-overline">Matches</p>
           <div className="mt-8 grid gap-6 md:grid-cols-3 min-w-0">
             {matchCards.map((match) => (
-              <div key={match.id} className="gn-card min-w-0 overflow-hidden">
+              <div key={match.id} className="gn-card min-w-0 p-6">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-label)]">
                     Score

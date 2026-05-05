@@ -4,6 +4,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers";
 
+const signedInNavLinks = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/matches", label: "Matches" },
+  { href: "/deal-board", label: "Deal Board" },
+  { href: "/documents", label: "Documents" },
+  { href: "/events", label: "Events" },
+  { href: "/payments", label: "Payments" },
+  { href: "/profile", label: "Profile" },
+];
+
 export default function TopHeader() {
   const router = useRouter();
   const { signedIn, signOut } = useAuth();
@@ -30,9 +40,20 @@ export default function TopHeader() {
         <div className="flex items-center gap-4">
           {signedIn ? (
             <>
+              <nav className="hidden items-center gap-4 lg:flex">
+                {signedInNavLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="text-sm font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)]"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
               <Link
                 href="/dashboard"
-                className="text-base font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)]"
+                className="text-base font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)] lg:hidden"
               >
                 Dashboard
               </Link>

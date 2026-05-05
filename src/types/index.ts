@@ -2,6 +2,7 @@
 export type Stage = "0" | "1" | "2" | "3" | "4";
 export type VerificationStatus = "unverified" | "pending" | "verified";
 export type AskOfferStatus = "Open" | "In Progress" | "Resolved" | "Available" | "Matched" | "Closed";
+export type MemberRole = "Explorer" | "Growth Partner" | "Community Builder" | "Growth Advisor";
 
 // Member Profile
 export interface Member {
@@ -67,7 +68,15 @@ export interface Match {
 }
 
 // Deal Board
-export type DealStage = "Discover" | "Intro" | "Proposal" | "Negotiation" | "Closed";
+export type DealStage =
+  | "Discover"
+  | "Intro & Scoping"
+  | "Proposal/Pilot"
+  | "Negotiation/Legal"
+  | "Closed-Won"
+  | "Closed-Lost";
+
+export type DealConfidence = "Low" | "Medium" | "High";
 
 export interface Deal {
   id: string;
@@ -77,10 +86,14 @@ export interface Deal {
   member2Id: string;
   stage: DealStage;
   fitScore: number;
+  confidence: DealConfidence;
+  impactProjection: string;
   lastActivity: Date;
   nextStep?: string;
   nextStepDueDate?: Date;
   isStaleFlagged: boolean;
+  staleReason?: string;
+  closeReasonCode?: string;
   notes?: string;
 }
 

@@ -67,14 +67,22 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 ];
 
 // Deal Board Stages
-export const DEAL_STAGES = ["Discover", "Intro", "Proposal", "Negotiation", "Closed"] as const;
+export const DEAL_STAGES = [
+  "Discover",
+  "Intro & Scoping",
+  "Proposal/Pilot",
+  "Negotiation/Legal",
+  "Closed-Won",
+  "Closed-Lost",
+] as const;
 
 export const DEAL_STAGE_DESCRIPTIONS: Record<string, string> = {
   "Discover": "Initial ASK/OFFER qualified",
-  "Intro": "Curated intro completed, discovery call scheduled",
-  "Proposal": "Scope drafted, proposal sent",
-  "Negotiation": "Terms under discussion",
-  "Closed": "Deal closed or on hold",
+  "Intro & Scoping": "Curated intro complete and scope alignment in progress",
+  "Proposal/Pilot": "Proposal sent or pilot design in review",
+  "Negotiation/Legal": "Terms redlining, legal, and compliance checks",
+  "Closed-Won": "Agreements signed and kickoff confirmed",
+  "Closed-Lost": "Closed with reason code captured",
 };
 
 // Event Types

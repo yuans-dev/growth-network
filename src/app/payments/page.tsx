@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SUBSCRIPTION_PLANS, CREDIT_PACKAGES } from "@/types/constants";
+import { SUBSCRIPTION_PLANS } from "@/types/constants";
 
 const currentSubscription = {
   plan: "starter" as const,
@@ -9,6 +9,12 @@ const currentSubscription = {
   renewalDate: "2024-05-15",
   status: "active" as const,
 };
+
+const CREDIT_PACKAGES = [
+  { id: "credits-25", name: "Starter Pack", credits: 25, price: 99 },
+  { id: "credits-100", name: "Growth Pack", credits: 100, price: 349 },
+  { id: "credits-250", name: "Scale Pack", credits: 250, price: 799 },
+];
 
 const creditHistory = [
   {
@@ -38,6 +44,9 @@ const creditHistory = [
 ];
 
 export default function PaymentsPage() {
+  const currentPlanDetails =
+    SUBSCRIPTION_PLANS.find((plan) => plan.id === currentSubscription.plan) ?? SUBSCRIPTION_PLANS[0];
+
   const handleUpgradePlan = (planId: string) => {
     console.log("upgrade-plan", planId);
   };
@@ -86,10 +95,11 @@ export default function PaymentsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-600 text-[var(--color-ink)]">
-                    {SUBSCRIPTION_PLANS[currentSubscription.plan].name}
+                    {currentPlanDetails.name}
                   </h3>
                   <p className="mt-1 text-sm text-[var(--color-body)]">
-                    {SUBSCRIPTION_PLANS[currentSubscription.plan].description}
+                    {currentPlanDetails.askCredits} ASK credits + {currentPlanDetails.offerCredits} OFFER credits per{" "}
+                    {currentPlanDetails.billingCycle}
                   </p>
                   <p className="mt-2 text-xs text-[var(--color-muted)]">
                     Renews on {currentSubscription.renewalDate}
@@ -97,7 +107,7 @@ export default function PaymentsPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-700 text-[var(--color-primary)]">
-                    ₱{SUBSCRIPTION_PLANS[currentSubscription.plan].price}/mo
+                    ₱{currentPlanDetails.price}/mo
                   </div>
                   <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-600 text-green-700">
                     ✓ Active
@@ -138,11 +148,11 @@ export default function PaymentsPage() {
               Upgrade your plan
             </h2>
             <div className="grid gap-6 md:grid-cols-3">
-              {Object.entries(SUBSCRIPTION_PLANS).map(([planId, plan]) => (
+              {SUBSCRIPTION_PLANS.map((plan) => (
                 <div
-                  key={planId}
+                  key={plan.id}
                   className={`rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6 ${
-                    planId === currentSubscription.plan ? 'ring-2 ring-[var(--color-primary)]' : ''
+                    plan.id === currentSubscription.plan ? 'ring-2 ring-[var(--color-primary)]' : ''
                   }`}
                 >
                   <div className="text-center">
@@ -153,20 +163,20 @@ export default function PaymentsPage() {
                       ₱{plan.price}/mo
                     </div>
                     <p className="mt-2 text-sm text-[var(--color-body)]">
-                      {plan.description}
+                      {plan.billingCycle} billing cycle
                     </p>
                     <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
-                      <li>• {plan.credits} credits/month</li>
-                      <li>• {plan.matches} matches/month</li>
-                      <li>• {plan.deals} active deals</li>
+                      <li>• {plan.askCredits} ASK credits/month</li>
+                      <li>• {plan.offerCredits} OFFER credits/month</li>
+                      <li>• Priority advisor queue</li>
                     </ul>
-                    {planId === currentSubscription.plan ? (
+                    {plan.id === currentSubscription.plan ? (
                       <span className="mt-4 inline-block rounded-full bg-[var(--color-primary)] px-6 py-2 text-sm font-600 text-white">
                         Current plan
                       </span>
                     ) : (
                       <button
-                        onClick={() => handleUpgradePlan(planId)}
+                        onClick={() => handleUpgradePlan(plan.id)}
                         className="mt-4 rounded-lg bg-[var(--color-primary)] px-6 py-2 font-500 text-white hover:bg-[var(--color-primary-active)]"
                       >
                         Upgrade
@@ -184,9 +194,9 @@ export default function PaymentsPage() {
               Purchase credits
             </h2>
             <div className="grid gap-6 md:grid-cols-3">
-              {Object.entries(CREDIT_PACKAGES).map(([packageId, pkg]) => (
+              {CREDIT_PACKAGES.map((pkg) => (
                 <div
-                  key={packageId}
+                  key={pkg.id}
                   className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6"
                 >
                   <div className="text-center">
@@ -203,7 +213,7 @@ export default function PaymentsPage() {
                       ₱{(pkg.price / pkg.credits).toFixed(2)} per credit
                     </p>
                     <button
-                      onClick={() => handlePurchaseCredits(packageId)}
+                      onClick={() => handlePurchaseCredits(pkg.id)}
                       className="mt-4 rounded-lg bg-[var(--color-primary)] px-6 py-2 font-500 text-white hover:bg-[var(--color-primary-active)]"
                     >
                       Purchase

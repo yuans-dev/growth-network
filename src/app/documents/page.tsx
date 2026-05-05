@@ -37,6 +37,24 @@ const requiredDocuments = [
   },
 ];
 
+const fullKycChecklist = [
+  "SEC/DTI/CDA certified true copies",
+  "BIR certificate of registration",
+  "Current mayor's/business permit",
+  "Banking verification details",
+  "Trade references (minimum 2)",
+  "PEP/sanctions and adverse media declarations",
+];
+
+const enhancedDdTriggers = [
+  "High-risk country links",
+  "PEP status confirmed",
+  "Deal size above threshold",
+  "Negative news/adverse media",
+  "Sensitive data processing",
+  "Regulated sector involvement",
+];
+
 export default function DocumentsPage() {
   const handleUploadDocument = (documentType: string) => {
     console.log("upload-document", documentType);
@@ -82,7 +100,7 @@ export default function DocumentsPage() {
           {/* Stage 2 Requirements */}
           <section className="mb-12">
             <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
-              Stage 2 Requirements
+              Light KYC (Stage 2)
             </h2>
             <div className="space-y-4">
               {requiredDocuments.map((req) => (
@@ -105,6 +123,47 @@ export default function DocumentsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
+              Full KYC (Stage 3)
+            </h2>
+            <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6">
+              <p className="text-sm text-[var(--color-body)]">
+                Full KYC extends Stage 2 checks and is required before Stage 3 deal execution.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
+                {fullKycChecklist.map((item) => (
+                  <li key={item}>- {item}</li>
+                ))}
+              </ul>
+              <button
+                onClick={() => handleUploadDocument("full-kyc-batch")}
+                className="mt-6 rounded-lg bg-[var(--color-primary)] px-6 py-2 font-500 text-white hover:bg-[var(--color-primary-active)]"
+              >
+                Submit full KYC pack
+              </button>
+            </div>
+          </section>
+
+          <section className="mb-12">
+            <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
+              Enhanced Due Diligence (Trigger-Based)
+            </h2>
+            <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6">
+              <p className="text-sm text-[var(--color-body)]">
+                Enhanced DD is activated when a risk trigger is detected.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
+                {enhancedDdTriggers.map((item) => (
+                  <li key={item}>- {item}</li>
+                ))}
+              </ul>
+              <div className="mt-6 rounded-lg bg-[var(--color-surface-soft)] p-4 text-sm text-[var(--color-body)]">
+                Typical outputs: risk classification (Low/Medium/High), access decision, and expiry alerts at 30 and 7 days.
+              </div>
             </div>
           </section>
 
