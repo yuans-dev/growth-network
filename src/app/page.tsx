@@ -51,19 +51,19 @@ export default function Home() {
         <div className="relative z-10 mx-auto grid w-full max-w-[1200px] gap-12 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
             <span className="gn-badge">
-              <span className="h-2 w-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
               Free mini-masterclass
             </span>
-            <div className="mt-6 font-display text-[clamp(56px,9vw,120px)] font-black uppercase leading-[0.95] tracking-[-0.02em]">
-              <div className="text-[var(--color-text-primary)]">
+            <div className="mt-6 font-display text-[clamp(56px,9vw,120px)] font-700 leading-[0.95]">
+              <div className="text-[var(--color-ink)]">
                 Where verified
               </div>
-              <div className="text-[var(--color-accent)]">introductions</div>
-              <div className="text-[var(--color-text-primary)]">
+              <div className="text-[var(--color-primary)]">introductions</div>
+              <div className="text-[var(--color-ink)]">
                 become real deals
               </div>
             </div>
-            <p className="mt-6 max-w-xl text-[20px] leading-relaxed text-[var(--color-text-secondary)]">
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--color-body)]">
               The Growth Network is a private deal environment. AI filters
               signal. Advisors protect standards. Nothing moves without consent.
             </p>
@@ -73,7 +73,7 @@ export default function Home() {
                 type="button"
                 onClick={handleRegister}
               >
-                Register now -&gt;
+                Register now →
               </button>
               <button
                 className="gn-btn-secondary"
@@ -85,14 +85,14 @@ export default function Home() {
             </div>
           </div>
           <form
-            className="rounded-[8px] border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-8"
+            className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-8"
             onSubmit={(event) => {
               event.preventDefault();
               handleRegister();
             }}
           >
-            <p className="gn-overline">Request access</p>
-            <p className="mt-4 text-sm text-[var(--color-text-secondary)]">
+            <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Request access</p>
+            <p className="mt-4 text-sm text-[var(--color-body)]">
               Submit your details for the intake call and masterclass invite.
             </p>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -125,25 +125,25 @@ export default function Home() {
               />
             </div>
             <button className="mt-6 w-full gn-btn-primary" type="submit">
-              Request invite -&gt;
+              Request invite →
             </button>
-            <p className="mt-4 text-xs text-[var(--color-text-muted)]">
+            <p className="mt-4 text-xs text-[var(--color-muted)]">
               Access is gated. Verification follows before any introductions.
             </p>
           </form>
         </div>
       </section>
 
-      <section className="bg-[var(--color-bg-surface)] px-[5%] py-32">
+      <section className="bg-[var(--color-surface-soft)] px-[5%] py-32">
         <div className="mx-auto w-full max-w-[1280px]">
-          <p className="gn-overline">Masterclass agenda</p>
+          <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Masterclass agenda</p>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {agendaItems.map((item) => (
               <div key={item} className="gn-card">
-                <h3 className="text-[16px] font-semibold uppercase tracking-[0.05em]">
+                <h3 className="text-base font-600 uppercase tracking-wide text-[var(--color-ink)]">
                   {item}
                 </h3>
-                <p className="mt-3 text-[15px] text-[var(--color-text-secondary)]">
+                <p className="mt-3 text-sm text-[var(--color-body)]">
                   Designed for operators who value signal, standards, and real
                   execution.
                 </p>
@@ -153,16 +153,16 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-[5%] py-32">
+      <section className="bg-[var(--color-canvas)] px-[5%] py-32">
         <div className="mx-auto w-full max-w-[1280px]">
-          <p className="gn-overline">Ideal attendee</p>
+          <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Ideal attendee</p>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             {attendeeArchetypes.map((item) => (
               <div key={item.title} className="gn-card">
-                <h3 className="text-[16px] font-semibold uppercase tracking-[0.05em]">
+                <h3 className="text-base font-600 uppercase tracking-wide text-[var(--color-ink)]">
                   {item.title}
                 </h3>
-                <p className="mt-3 text-[15px] text-[var(--color-text-secondary)]">
+                <p className="mt-3 text-sm text-[var(--color-body)]">
                   {item.detail}
                 </p>
               </div>
@@ -171,20 +171,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden px-[5%] py-32">
-        <div className="absolute inset-0 bg-[var(--color-bg-surface)] opacity-90" />
+      <section className="relative overflow-hidden bg-[var(--color-surface-strong)] px-[5%] py-32">
         <div className="relative z-10 mx-auto w-full max-w-[1280px]">
-          <p className="gn-overline">Results</p>
+          <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Results</p>
           <div className="mt-10 grid gap-8 md:grid-cols-3">
             {proofStats.map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-[4px] border border-[var(--color-border)] bg-[var(--color-bg-card)] p-7"
+                className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-8"
               >
-                <div className="font-display text-[56px] font-black leading-none text-[var(--color-accent)]">
+                <div className="text-5xl font-700 leading-none text-[var(--color-primary)]">
                   {stat.value}
                 </div>
-                <div className="mt-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
+                <div className="mt-4 text-sm font-600 text-[var(--color-muted)]">
                   {stat.label}
                 </div>
               </div>
@@ -193,15 +192,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="px-[5%] py-32">
+      <section className="bg-[var(--color-canvas)] px-[5%] py-32">
         <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start gap-6 text-left">
-          <div className="font-display text-[clamp(48px,7vw,110px)] font-black uppercase leading-[0.92]">
-            <div className="text-[var(--color-text-primary)]">
+          <div className="font-display text-[clamp(32px,6vw,56px)] font-700 leading-tight">
+            <div className="text-[var(--color-ink)]">
               Join the room
             </div>
-            <div className="text-[var(--color-accent)]">built for closure</div>
+            <div className="text-[var(--color-primary)]">built for closure</div>
           </div>
-          <p className="max-w-2xl text-[18px] text-[var(--color-text-secondary)]">
+          <p className="max-w-2xl text-lg text-[var(--color-body)]">
             The Growth Network is not open access. Start with the masterclass,
             then move into verification and matching.
           </p>
@@ -210,7 +209,7 @@ export default function Home() {
             type="button"
             onClick={handleRegister}
           >
-            Reserve seat -&gt;
+            Reserve seat →
           </button>
         </div>
       </section>
@@ -218,7 +217,7 @@ export default function Home() {
       <BottomNav
         activeStage={0}
         nextHref="/stage-1"
-        nextLabel="Stage 01 - Membership -&gt;"
+        nextLabel="Stage 01 - Membership →"
       />
     </div>
   );

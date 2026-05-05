@@ -1,22 +1,17 @@
 import type { Metadata } from "next";
-import { Barlow_Condensed, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import TopHeader from "./_components/TopHeader";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-inter",
+  variable: "--font-cereal",
   subsets: ["latin"],
-});
-
-const barlowCondensed = Barlow_Condensed({
-  variable: "--font-barlow-condensed",
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "The Growth Network",
-  description: "Private deal environment for verified members.",
+  title: "The Growth Network - Marketplace",
+  description: "Discover verified homes, experiences, and services.",
 };
 
 export default function RootLayout({
@@ -27,9 +22,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${barlowCondensed.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full bg-[var(--color-bg-base)] text-[var(--color-text-primary)] font-sans">
+      <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink)] font-sans">
         <TopHeader />
         <main>{children}</main>
       </body>
