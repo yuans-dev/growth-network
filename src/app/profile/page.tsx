@@ -309,7 +309,12 @@ export default function ProfilePage() {
                       rows={3}
                       className="w-full rounded-lg border border-[var(--color-hairline)] bg-white px-3 py-2 text-sm"
                     />
+                    <label className="block text-sm font-500 text-[var(--color-body)]">
+                      ASK status
+                    </label>
                     <select
+                      aria-label="ASK status"
+                      title="ASK status"
                       value={askForm.status}
                       onChange={(event) => setAskForm((prev) => ({ ...prev, status: event.target.value as AskOfferStatus }))}
                       className="w-full rounded-lg border border-[var(--color-hairline)] bg-white px-3 py-2 text-sm"
@@ -399,7 +404,12 @@ export default function ProfilePage() {
                       rows={3}
                       className="w-full rounded-lg border border-[var(--color-hairline)] bg-white px-3 py-2 text-sm"
                     />
+                    <label className="block text-sm font-500 text-[var(--color-body)]">
+                      OFFER status
+                    </label>
                     <select
+                      aria-label="OFFER status"
+                      title="OFFER status"
                       value={offerForm.status}
                       onChange={(event) => setOfferForm((prev) => ({ ...prev, status: event.target.value as AskOfferStatus }))}
                       className="w-full rounded-lg border border-[var(--color-hairline)] bg-white px-3 py-2 text-sm"
