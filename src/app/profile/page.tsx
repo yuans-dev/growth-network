@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import BottomNav from "../_components/BottomNav";
 import { AskOfferStatus } from "@/types";
 
 const memberProfile = {
@@ -149,6 +148,7 @@ export default function ProfilePage() {
                   width="100%"
                   height="100%"
                   src={memberProfile.introVideoUrl}
+                  title="Intro video"
                   frameBorder="0"
                   allowFullScreen
                   className="rounded-lg"
@@ -267,8 +267,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      <BottomNav activeStage={2} nextHref="/matches" nextLabel="Matches →" />
     </div>
   );
 }

@@ -108,11 +108,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <section className="mt-16">
+        <section className="mt-16 overflow-hidden">
           <p className="gn-overline">Matches</p>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid gap-6 md:grid-cols-3 min-w-0">
             {matchCards.map((match) => (
-              <div key={match.id} className="gn-card">
+              <div key={match.id} className="gn-card min-w-0 overflow-hidden">
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-label)]">
                     Score
@@ -129,7 +129,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
                       ASK
                     </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2 min-w-0">
                       {match.ask.map((item) => (
                         <span
                           key={item}
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
                       OFFER
                     </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-2 min-w-0">
                       {match.offer.map((item) => (
                         <span
                           key={item}

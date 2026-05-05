@@ -1,7 +1,5 @@
 "use client";
 
-import BottomNav from "../_components/BottomNav";
-
 const painPoints = [
   "Unqualified introductions waste weeks.",
   "Social networks reward volume over alignment.",
@@ -261,12 +259,6 @@ export default function StageOnePage() {
           </div>
         </div>
       </section>
-
-      <BottomNav
-        activeStage={1}
-        nextHref="/stage-2"
-        nextLabel="Stage 02 - Verification -&gt;"
-      />
     </div>
   );
 }

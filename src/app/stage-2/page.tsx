@@ -1,7 +1,5 @@
 "use client";
 
-import BottomNav from "../_components/BottomNav";
-
 const entryRequirements = [
   "Registered business name and entity details",
   "Authorized signatory and UBO disclosure",
@@ -216,12 +214,6 @@ export default function StageTwoPage() {
           </div>
         </div>
       </section>
-
-      <BottomNav
-        activeStage={2}
-        nextHref="/stage-3"
-        nextLabel="Stage 03 - Commit -&gt;"
-      />
     </div>
   );
 }

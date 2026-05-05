@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import BottomNav from "../_components/BottomNav";
 
 const allMatches = [
   {
@@ -93,17 +92,15 @@ export default function MatchesPage() {
       {/* Main Content */}
       <div className="px-[5%] py-12">
         <div className="mx-auto max-w-[1280px]">
-          <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
             {allMatches.map((match) => (
               <div
                 key={match.id}
-                className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-8 hover:shadow-md transition-shadow"
+                className="rounded-[24px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-8 shadow-sm transition-shadow hover:shadow-lg"
               >
-                {/* Header with Score */}
-                <div className="flex items-start justify-between gap-6">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex-1">
-                    {/* Fit Score and Status */}
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className="rounded-full bg-[var(--color-primary)] px-4 py-1 text-sm font-600 text-white">
                         {match.score} fit score
                       </span>
@@ -116,89 +113,79 @@ export default function MatchesPage() {
                       </span>
                     </div>
 
-                    {/* Summary */}
-                    <h2 className="text-xl font-600 text-[var(--color-ink)]">
+                    <h2 className="mt-4 mr-4 text-2xl font-semibold text-[var(--color-ink)]">
                       {match.summary}
                     </h2>
-                    <p className="mt-2 text-[var(--color-body)]">
+                    <p className="mt-3 mr-4 max-w-2xl text-[var(--color-body)]">
                       {match.reason}
                     </p>
 
-                    {/* Other Party Info */}
-                    <div className="mt-4 rounded-lg bg-[var(--color-surface-soft)] p-4">
-                      <p className="text-xs font-600 text-[var(--color-muted)] uppercase">
+                    <div className="mt-6 rounded-[20px] border border-[var(--color-hairline-soft)] bg-[var(--color-surface-soft)] p-5">
+                      <p className="text-xs font-600 uppercase tracking-[0.18em] text-[var(--color-muted)]">
                         Other party
                       </p>
-                      <p className="mt-1 font-600 text-[var(--color-ink)]">
+                      <p className="mt-3 text-lg font-semibold text-[var(--color-ink)]">
                         {match.otherParty}
                       </p>
-                      <p className="text-sm text-[var(--color-body)]">
+                      <p className="mt-2 text-sm text-[var(--color-body)]">
                         {match.otherSector}
                       </p>
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-3">
-                    {match.status === 'pending' && (
+                  <div className="flex w-full max-w-[260px] flex-col gap-3 lg:w-auto">
+                    {match.status === 'pending' ? (
                       <>
                         <button
                           onClick={() => handleAcceptMatch(match.id)}
-                          className="rounded-lg bg-[var(--color-primary)] px-6 py-2 font-500 text-white hover:bg-[var(--color-primary-active)] whitespace-nowrap"
+                          className="w-full rounded-lg bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-active)]"
                         >
                           Accept match
                         </button>
                         <button
                           onClick={() => handleDeclineMatch(match.id)}
-                          className="rounded-lg border border-[var(--color-hairline)] px-6 py-2 font-500 text-[var(--color-ink)] hover:bg-[var(--color-surface-soft)] whitespace-nowrap"
+                          className="w-full rounded-lg border border-[var(--color-hairline)] bg-white px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-surface-soft)]"
                         >
                           Decline
                         </button>
                       </>
-                    )}
-                    {match.status === 'accepted' && (
-                      <button
-                        className="rounded-lg bg-green-500 px-6 py-2 font-500 text-white whitespace-nowrap cursor-default"
-                      >
+                    ) : match.status === 'accepted' ? (
+                      <div className="rounded-lg bg-green-50 px-6 py-3 text-sm font-semibold text-green-800">
                         ✓ Matched
-                      </button>
-                    )}
-                    {match.status === 'declined' && (
-                      <button
-                        className="rounded-lg bg-gray-200 px-6 py-2 font-500 text-[var(--color-muted)] whitespace-nowrap cursor-default"
-                      >
+                      </div>
+                    ) : (
+                      <div className="rounded-lg bg-gray-100 px-6 py-3 text-sm font-semibold text-[var(--color-muted)]">
                         ✗ Declined
-                      </button>
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* ASK and OFFER Details */}
-                <div className="mt-6 grid gap-6 md:grid-cols-2">
-                  <div className="rounded-lg border border-[var(--color-hairline-soft)] bg-[var(--color-surface-soft)] p-4">
-                    <p className="text-xs font-600 text-[var(--color-muted)] uppercase">
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-[20px] border border-[var(--color-hairline-soft)] bg-[var(--color-surface-soft)] p-5">
+                    <p className="text-xs font-600 uppercase tracking-[0.18em] text-[var(--color-muted)] mb-4">
                       Their ASK
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-wrap gap-2">
                       {match.ask.map((item) => (
                         <span
                           key={item}
-                          className="rounded-full bg-blue-100 px-3 py-1 text-xs font-500 text-blue-700"
+                          className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
                         >
                           {item}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-[var(--color-hairline-soft)] bg-[var(--color-surface-soft)] p-4">
-                    <p className="text-xs font-600 text-[var(--color-muted)] uppercase">
+                  <div className="rounded-[20px] border border-[var(--color-hairline-soft)] bg-[var(--color-surface-soft)] p-5">
+                    <p className="text-xs font-600 uppercase tracking-[0.18em] text-[var(--color-muted)] mb-4">
                       Their OFFER
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-wrap gap-2">
                       {match.offer.map((item) => (
                         <span
                           key={item}
-                          className="rounded-full bg-green-100 px-3 py-1 text-xs font-500 text-green-700"
+                          className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700"
                         >
                           {item}
                         </span>
@@ -224,8 +211,6 @@ export default function MatchesPage() {
           </div>
         </div>
       </div>
-
-      <BottomNav activeStage={2} nextHref="/deal-board" nextLabel="Deal board →" />
     </div>
   );
 }

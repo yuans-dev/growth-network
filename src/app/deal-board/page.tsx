@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import BottomNav from "../_components/BottomNav";
 import { DEAL_STAGES, DEAL_STAGE_DESCRIPTIONS } from "@/types/constants";
 
 const dealsByStage = {
@@ -94,7 +93,7 @@ export default function DealBoardPage() {
       {/* Kanban Board */}
       <div className="overflow-x-auto px-[5%] py-12">
         <div className="mx-auto w-full max-w-full">
-          <div className="flex gap-6" style={{ minWidth: "fit-content" }}>
+          <div className="flex gap-6 min-w-[fit-content]">
             {DEAL_STAGES.map((stage) => (
               <div
                 key={stage}
@@ -196,8 +195,6 @@ export default function DealBoardPage() {
           </ul>
         </div>
       </section>
-
-      <BottomNav activeStage={2} nextHref="/events" nextLabel="Events →" />
     </div>
   );
 }

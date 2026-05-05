@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import BottomNav from "../_components/BottomNav";
 import { EVENT_TYPES } from "@/types/constants";
 
 const upcomingEvents = [
@@ -215,8 +214,6 @@ export default function EventsPage() {
           </section>
         </div>
       </div>
-
-      <BottomNav activeStage={2} nextHref="/documents" nextLabel="Documents →" />
     </div>
   );
 }

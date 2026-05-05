@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import TopHeader from "./_components/TopHeader";
 import "./globals.css";
+import { Providers } from "./providers";
+import TopHeader from "./_components/TopHeader";
 
 const inter = Inter({
   variable: "--font-cereal",
@@ -23,10 +24,13 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} h-full antialiased scroll-smooth`}
+      suppressHydrationWarning
     >
       <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink)] font-sans">
-        <TopHeader />
-        <main>{children}</main>
+        <Providers>
+          <TopHeader />
+          <main>{children}</main>
+        </Providers>
       </body>
     </html>
   );

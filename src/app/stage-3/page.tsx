@@ -1,7 +1,5 @@
 "use client";
 
-import BottomNav from "../_components/BottomNav";
-
 const howItWorks = [
   {
     title: "AI scoring",
@@ -245,12 +243,6 @@ export default function StageThreePage() {
           </form>
         </div>
       </section>
-
-      <BottomNav
-        activeStage={3}
-        nextHref="/stage-4"
-        nextLabel="Stage 04 - Execute -&gt;"
-      />
     </div>
   );
 }

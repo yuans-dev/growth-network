@@ -1,7 +1,5 @@
 "use client";
 
-import BottomNav from "../_components/BottomNav";
-
 const unlocks = [
   {
     title: "Due diligence framework",
@@ -160,8 +158,6 @@ export default function StageFourPage() {
           </div>
         </div>
       </section>
-
-      <BottomNav activeStage={4} />
     </div>
   );
 }

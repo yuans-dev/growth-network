@@ -1,224 +1,179 @@
 "use client";
 
-import BottomNav from "./_components/BottomNav";
-
-const agendaItems = [
-  "Deal alignment framework",
-  "Verification and access standards",
-  "Matching cycle structure",
-  "Advisor review checkpoints",
-  "Event conversion protocols",
-  "Deal board discipline",
-];
-
-const attendeeArchetypes = [
-  {
-    title: "Founder / Operator",
-    detail: "Scaling leaders seeking verified introductions and capital fit.",
-  },
-  {
-    title: "Capital Allocator",
-    detail: "Investors and family offices prioritizing structured deal flow.",
-  },
-  {
-    title: "Strategic Operator",
-    detail: "Operators with execution leverage and real outcomes to offer.",
-  },
-  {
-    title: "Growth Advisor",
-    detail: "Sector specialists who guide standards and introductions.",
-  },
-];
-
-const proofStats = [
-  { value: "2.3M", label: "Deal value validated" },
-  { value: "147", label: "Verified members" },
-  { value: "92%", label: "Match acceptance" },
-];
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "./providers";
 
 export default function Home() {
-  const handleRegister = () => {
-    console.log("register-masterclass");
+  const router = useRouter();
+  const { signedIn, signIn, user } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [loginError, setLoginError] = useState("");
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate login check
+    if (loginData.email && loginData.password) {
+      // In real app, this would authenticate against backend
+      signIn({ email: loginData.email });
+      router.push("/dashboard");
+    } else {
+      setLoginError("Please enter your email and password");
+    }
   };
 
-  const handleIntake = () => {
-    console.log("book-intake");
+  const handleLoginInputChange = (field: string, value: string) => {
+    setLoginData(prev => ({ ...prev, [field]: value }));
+    if (loginError) setLoginError("");
   };
 
   return (
-    <div className="pb-[96px]">
-      <section className="relative gn-hero overflow-hidden px-[10%] py-40">
-        <div className="relative z-10 mx-auto grid w-full max-w-[1200px] gap-12 lg:grid-cols-[1.2fr_0.8fr]">
-          <div>
-            <span className="gn-badge">
-              <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
-              Free mini-masterclass
-            </span>
-            <div className="mt-6 font-display text-[clamp(56px,9vw,120px)] font-700 leading-[0.95]">
-              <div className="text-[var(--color-ink)]">
-                Where verified
-              </div>
-              <div className="text-[var(--color-primary)]">introductions</div>
-              <div className="text-[var(--color-ink)]">
-                become real deals
-              </div>
-            </div>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--color-body)]">
-              The Growth Network is a private deal environment. AI filters
-              signal. Advisors protect standards. Nothing moves without consent.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
+    <div className="min-h-screen bg-[var(--color-canvas)]">
+      <main className="px-[5%] py-20">
+        <div className="mx-auto max-w-[640px] text-center">
+          {signedIn && !showLogin ? (
+            <div className="space-y-8 rounded-[20px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-8">
+              <h1 className="font-display text-4xl font-700 text-[var(--color-ink)]">
+                Welcome back{user?.email ? `, ${user.email}` : ""}
+              </h1>
+              <p className="mt-4 text-lg text-[var(--color-body)]">
+                You're already signed in for testing. Use the header links to navigate to dashboard and other pages.
+              </p>
               <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
                 className="gn-btn-primary"
-                type="button"
-                onClick={handleRegister}
               >
-                Register now →
+                Go to Dashboard
               </button>
-              <button
-                className="gn-btn-secondary"
-                type="button"
-                onClick={handleIntake}
-              >
-                Book intake call
-              </button>
-            </div>
-          </div>
-          <form
-            className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-8"
-            onSubmit={(event) => {
-              event.preventDefault();
-              handleRegister();
-            }}
-          >
-            <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Request access</p>
-            <p className="mt-4 text-sm text-[var(--color-body)]">
-              Submit your details for the intake call and masterclass invite.
-            </p>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <input
-                className="gn-input"
-                aria-label="First name"
-                placeholder="First name"
-              />
-              <input
-                className="gn-input"
-                aria-label="Last name"
-                placeholder="Last name"
-              />
-            </div>
-            <div className="mt-4 grid gap-4">
-              <input
-                className="gn-input"
-                aria-label="Work email"
-                placeholder="Work email"
-              />
-              <input
-                className="gn-input"
-                aria-label="Company"
-                placeholder="Company"
-              />
-              <input
-                className="gn-input"
-                aria-label="Role"
-                placeholder="Role"
-              />
-            </div>
-            <button className="mt-6 w-full gn-btn-primary" type="submit">
-              Request invite →
-            </button>
-            <p className="mt-4 text-xs text-[var(--color-muted)]">
-              Access is gated. Verification follows before any introductions.
-            </p>
-          </form>
-        </div>
-      </section>
-
-      <section className="bg-[var(--color-surface-soft)] px-[5%] py-32">
-        <div className="mx-auto w-full max-w-[1280px]">
-          <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Masterclass agenda</p>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {agendaItems.map((item) => (
-              <div key={item} className="gn-card">
-                <h3 className="text-base font-600 uppercase tracking-wide text-[var(--color-ink)]">
-                  {item}
-                </h3>
-                <p className="mt-3 text-sm text-[var(--color-body)]">
-                  Designed for operators who value signal, standards, and real
-                  execution.
+              <div className="mt-8 rounded-[20px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-6 text-left">
+                <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[var(--color-muted)]">
+                  Quick access
                 </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-[var(--color-canvas)] px-[5%] py-32">
-        <div className="mx-auto w-full max-w-[1280px]">
-          <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Ideal attendee</p>
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {attendeeArchetypes.map((item) => (
-              <div key={item.title} className="gn-card">
-                <h3 className="text-base font-600 uppercase tracking-wide text-[var(--color-ink)]">
-                  {item.title}
-                </h3>
-                <p className="mt-3 text-sm text-[var(--color-body)]">
-                  {item.detail}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden bg-[var(--color-surface-strong)] px-[5%] py-32">
-        <div className="relative z-10 mx-auto w-full max-w-[1280px]">
-          <p className="text-sm font-600 text-[var(--color-muted)] uppercase tracking-wide">Results</p>
-          <div className="mt-10 grid gap-8 md:grid-cols-3">
-            {proofStats.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-8"
-              >
-                <div className="text-5xl font-700 leading-none text-[var(--color-primary)]">
-                  {stat.value}
-                </div>
-                <div className="mt-4 text-sm font-600 text-[var(--color-muted)]">
-                  {stat.label}
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <Link href="/dashboard" className="gn-btn-secondary w-full text-center">
+                    Dashboard
+                  </Link>
+                  <Link href="/matches" className="gn-btn-secondary w-full text-center">
+                    Matches
+                  </Link>
+                  <Link href="/deal-board" className="gn-btn-secondary w-full text-center">
+                    Deal Board
+                  </Link>
+                  <Link href="/events" className="gn-btn-secondary w-full text-center">
+                    Events
+                  </Link>
+                  <Link href="/documents" className="gn-btn-secondary w-full text-center">
+                    Documents
+                  </Link>
+                  <Link href="/profile" className="gn-btn-secondary w-full text-center">
+                    Profile
+                  </Link>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-[var(--color-canvas)] px-[5%] py-32">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start gap-6 text-left">
-          <div className="font-display text-[clamp(32px,6vw,56px)] font-700 leading-tight">
-            <div className="text-[var(--color-ink)]">
-              Join the room
             </div>
-            <div className="text-[var(--color-primary)]">built for closure</div>
-          </div>
-          <p className="max-w-2xl text-lg text-[var(--color-body)]">
-            The Growth Network is not open access. Start with the masterclass,
-            then move into verification and matching.
-          </p>
-          <button
-            className="gn-btn-primary"
-            type="button"
-            onClick={handleRegister}
-          >
-            Reserve seat →
-          </button>
-        </div>
-      </section>
+          ) : showLogin ? (
+            <div className="space-y-8">
+              <div>
+                <h1 className="font-display text-4xl font-700 text-[var(--color-ink)]">
+                  Welcome back
+                </h1>
+                <p className="mt-4 text-lg text-[var(--color-body)]">
+                  Sign in to access your dashboard and matches
+                </p>
+              </div>
 
-      <BottomNav
-        activeStage={0}
-        nextHref="/stage-1"
-        nextLabel="Stage 01 - Membership →"
-      />
+              <form onSubmit={handleLogin} className="space-y-6">
+                {loginError && (
+                  <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+                    {loginError}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <input
+                    className="gn-input"
+                    type="email"
+                    placeholder="Email address"
+                    value={loginData.email}
+                    onChange={(e) => handleLoginInputChange("email", e.target.value)}
+                    required
+                  />
+                  <input
+                    className="gn-input"
+                    type="password"
+                    placeholder="Password"
+                    value={loginData.password}
+                    onChange={(e) => handleLoginInputChange("password", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <button className="w-full gn-btn-primary" type="submit">
+                  Sign in →
+                </button>
+              </form>
+
+              <div className="text-center">
+                <p className="text-sm text-[var(--color-muted)]">
+                  New to the platform?{" "}
+                  <Link
+                    href="/onboarding"
+                    className="text-[var(--color-primary)] hover:underline"
+                  >
+                    Start onboarding
+                  </Link>
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <div>
+                <h1 className="font-display text-4xl font-700 text-[var(--color-ink)]">
+                  The Growth Network
+                </h1>
+                <p className="mt-4 text-lg text-[var(--color-body)]">
+                  AI-powered matching platform for serious entrepreneurs
+                </p>
+                <p className="mt-2 text-sm text-[var(--color-muted)]">
+                  Where verified introductions become real deals
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <Link
+                  href="/onboarding"
+                  className="block w-full gn-btn-primary text-center"
+                >
+                  Start Onboarding →
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowLogin(true)}
+                  className="w-full gn-btn-secondary"
+                >
+                  Member Login
+                </button>
+              </div>
+
+              <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-6 text-left">
+                <h3 className="font-600 text-[var(--color-ink)]">
+                  Platform Access
+                </h3>
+                <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
+                  <li>• Invitation-only membership</li>
+                  <li>• Stage-based progression (1→2→3→4)</li>
+                  <li>• Credit-based matching system</li>
+                  <li>• Advisor-reviewed introductions</li>
+                  <li>• Document verification required</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
