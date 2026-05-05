@@ -5,13 +5,17 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 type User = {
   email: string;
   name?: string;
+  role?: "Explorer" | "Growth Partner" | "Community Builder" | "Growth Advisor";
+  accountStatus: "invited" | "active";
 };
 
 type AuthContextType = {
   user: User | null;
   signedIn: boolean;
+  isInvitedAccount: boolean;
   signIn: (user: User) => void;
   signOut: () => void;
+  completeInviteClaim: (details: { name: string }) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,7 +29,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem(AUTH_KEY);
     if (stored) {
       try {
-        setUser(JSON.parse(stored));
+        const parsed = JSON.parse(stored) as Partial<User>;
+        if (parsed.email) {
+          setUser({
+            email: parsed.email,
+            name: parsed.name,
+            role: parsed.role,
+            accountStatus: parsed.accountStatus ?? "active",
+          });
+        } else {
+          localStorage.removeItem(AUTH_KEY);
+        }
       } catch {
         localStorage.removeItem(AUTH_KEY);
       }
@@ -37,6 +51,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       signedIn: !!user,
+      isInvitedAccount: user?.accountStatus === "invited",
       signIn: (nextUser: User) => {
         setUser(nextUser);
         localStorage.setItem(AUTH_KEY, JSON.stringify(nextUser));
@@ -44,6 +59,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
       signOut: () => {
         setUser(null);
         localStorage.removeItem(AUTH_KEY);
+      },
+      completeInviteClaim: ({ name }: { name: string }) => {
+        if (!user) return;
+        const updatedUser: User = {
+          ...user,
+          name,
+          accountStatus: "active",
+        };
+        setUser(updatedUser);
+        localStorage.setItem(AUTH_KEY, JSON.stringify(updatedUser));
       },
     }),
     [user]

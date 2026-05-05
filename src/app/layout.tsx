@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import TopHeader from "./_components/TopHeader";
+import AuthGate from "./_components/AuthGate";
 
 const inter = Inter({
   variable: "--font-cereal",
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink)] font-sans">
         <Providers>
           <TopHeader />
-          <main>{children}</main>
+          <AuthGate>
+            <main>{children}</main>
+          </AuthGate>
         </Providers>
       </body>
     </html>

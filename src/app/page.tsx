@@ -5,9 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./providers";
 
+const PREDEFINED_INVITED_ACCOUNTS: Record<string, { role: "Explorer" | "Growth Partner" | "Community Builder" | "Growth Advisor" }> = {
+  "invitee@growthnetwork.ph": { role: "Growth Partner" },
+  "advisor-invite@growthnetwork.ph": { role: "Growth Advisor" },
+  "builder-invite@growthnetwork.ph": { role: "Community Builder" },
+};
+
 export default function Home() {
   const router = useRouter();
-  const { signedIn, signIn, user } = useAuth();
+  const { signedIn, signIn, user, isInvitedAccount } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
@@ -16,9 +22,19 @@ export default function Home() {
     e.preventDefault();
     // Simulate login check
     if (loginData.email && loginData.password) {
-      // In real app, this would authenticate against backend
-      signIn({ email: loginData.email });
-      router.push("/dashboard");
+      const normalizedEmail = loginData.email.trim().toLowerCase();
+      const invitedAccount = PREDEFINED_INVITED_ACCOUNTS[normalizedEmail];
+      if (invitedAccount) {
+        signIn({
+          email: normalizedEmail,
+          role: invitedAccount.role,
+          accountStatus: "invited",
+        });
+        router.push("/accept-invite");
+      } else {
+        signIn({ email: normalizedEmail, accountStatus: "active" });
+        router.push("/dashboard");
+      }
     } else {
       setLoginError("Please enter your email and password");
     }
@@ -43,10 +59,10 @@ export default function Home() {
               </p>
               <button
                 type="button"
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push(isInvitedAccount ? "/accept-invite" : "/dashboard")}
                 className="gn-btn-primary"
               >
-                Go to Dashboard
+                {isInvitedAccount ? "Complete Invite Claim" : "Go to Dashboard"}
               </button>
               <div className="mt-8 rounded-[20px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-6 text-left">
                 <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[var(--color-muted)]">
@@ -118,12 +134,12 @@ export default function Home() {
 
               <div className="text-center">
                 <p className="text-sm text-[var(--color-muted)]">
-                  New to the platform?{" "}
+                  Need an invite?{" "}
                   <Link
                     href="/onboarding"
                     className="text-[var(--color-primary)] hover:underline"
                   >
-                    Start onboarding
+                    View invite process
                   </Link>
                 </p>
               </div>
@@ -147,7 +163,7 @@ export default function Home() {
                   href="/onboarding"
                   className="block w-full gn-btn-primary text-center"
                 >
-                  Start Onboarding →
+                  How Invitations Work →
                 </Link>
                 <button
                   type="button"
@@ -164,12 +180,16 @@ export default function Home() {
                 </h3>
                 <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
                   <li>• Invitation-only membership</li>
+                  <li>• Invited accounts must claim access before activation</li>
                   <li>• Stage-based progression (1→2→3→4)</li>
                   <li>• Credit-based matching system</li>
                   <li>• Advisor-reviewed introductions</li>
                   <li>• Document verification required</li>
                 </ul>
               </div>
+              <p className="text-xs text-[var(--color-muted)]">
+                Demo invited emails: invitee@growthnetwork.ph, advisor-invite@growthnetwork.ph, builder-invite@growthnetwork.ph
+              </p>
             </div>
           )}
         </div>

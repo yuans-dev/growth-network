@@ -16,7 +16,7 @@ const signedInNavLinks = [
 
 export default function TopHeader() {
   const router = useRouter();
-  const { signedIn, signOut } = useAuth();
+  const { signedIn, signOut, isInvitedAccount } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-hairline)] bg-[var(--color-nav-bg)] backdrop-blur-sm">
@@ -41,7 +41,10 @@ export default function TopHeader() {
           {signedIn ? (
             <>
               <nav className="hidden items-center gap-4 lg:flex">
-                {signedInNavLinks.map((link) => (
+                {(isInvitedAccount
+                  ? [{ href: "/accept-invite", label: "Accept Invite" }]
+                  : signedInNavLinks
+                ).map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -52,10 +55,10 @@ export default function TopHeader() {
                 ))}
               </nav>
               <Link
-                href="/dashboard"
+                href={isInvitedAccount ? "/accept-invite" : "/dashboard"}
                 className="text-base font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)] lg:hidden"
               >
-                Dashboard
+                {isInvitedAccount ? "Accept Invite" : "Dashboard"}
               </Link>
               <button
                 type="button"
@@ -75,12 +78,6 @@ export default function TopHeader() {
                 className="text-base font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)]"
               >
                 Sign in
-              </Link>
-              <Link
-                href="/onboarding"
-                className="rounded-full bg-[var(--color-ink)] px-6 py-2 text-sm font-600 text-white hover:bg-[var(--color-body)]"
-              >
-                Sign up
               </Link>
             </>
           )}
