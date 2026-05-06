@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "seed:invited": "node scripts/seed-invited-account.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

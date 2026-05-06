@@ -7,12 +7,12 @@
   --color-surface-soft: #f7f7f7;
   --color-surface-strong: #f2f2f2;
   --color-surface-card: #ffffff;
-  
+
   /* Primary Brand */
-  --color-primary: #ff385c;
-  --color-primary-active: #e00b41;
-  --color-primary-disabled: #ffd1da;
-  
+  --color-primary: #2b0a27;
+  --color-primary-active: #1f071c;
+  --color-primary-disabled: #6a4a63;
+
   /* Text Colors */
   --color-ink: #222222;
   --color-body: #3f3f3f;
@@ -20,19 +20,19 @@
   --color-muted-soft: #929292;
   --color-on-primary: #ffffff;
   --color-on-dark: #ffffff;
-  
+
   /* Borders & Lines */
   --color-hairline: #dddddd;
   --color-hairline-soft: #ebebeb;
   --color-border-strong: #c1c1c1;
-  
+
   /* Accents */
   --color-luxe: #460479;
   --color-plus: #92174d;
   --color-star-rating: #222222;
   --color-legal-link: #428bff;
   --color-error-text: #c13515;
-  
+
   /* Legacy aliases for compatibility */
   --color-bg-base: #ffffff;
   --color-bg-surface: #f7f7f7;
@@ -115,7 +115,9 @@ body {
   border-radius: 14px;
   padding: 0;
   overflow: hidden;
-  transition: box-shadow 200ms ease, transform 200ms ease;
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
 }
 
 .gn-card:hover {
@@ -149,7 +151,9 @@ body {
   font-size: 14px;
   width: 100%;
   font-family: inherit;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .gn-input::placeholder {
@@ -175,7 +179,9 @@ body {
   height: 48px;
   border: none;
   cursor: pointer;
-  transition: background 150ms ease, transform 100ms ease;
+  transition:
+    background 150ms ease,
+    transform 100ms ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -202,7 +208,9 @@ body {
   border-radius: 8px;
   height: 48px;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -230,4 +238,8 @@ body {
 
 .gn-search-pill:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+button {
+  cursor: pointer;
 }

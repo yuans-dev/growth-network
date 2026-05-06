@@ -1,259 +1,128 @@
 "use client";
 
 import Link from "next/link";
-import { DOCUMENT_TYPES } from "@/types/constants";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { createPlaceholderDocument, fetchDocuments } from "@/lib/app-data";
+import { useAuth } from "../providers";
 
-const documents = [
-  {
-    id: "doc-1",
-    type: "sec-certificate" as const,
-    status: "approved" as const,
-    fileName: "TechFlow_Systems_SEC_Certificate.pdf",
-    uploadedAt: "2024-04-15",
-    reviewedAt: "2024-04-16",
-    reviewedBy: "Advisor Sarah",
-  },
-  {
-    id: "doc-2",
-    type: "dti-registration" as const,
-    status: "approved" as const,
-    fileName: "TechFlow_Systems_DTI_Registration.pdf",
-    uploadedAt: "2024-04-15",
-    reviewedAt: "2024-04-16",
-    reviewedBy: "Advisor Sarah",
-  },
-];
+const REQUIRED_TYPES = ["sec-certificate", "dti-registration"];
 
-const requiredDocuments = [
-  {
-    type: "sec-certificate" as const,
-    required: true,
-    status: "approved" as const,
-  },
-  {
-    type: "dti-registration" as const,
-    required: true,
-    status: "approved" as const,
-  },
-];
-
-const fullKycChecklist = [
-  "SEC/DTI/CDA certified true copies",
-  "BIR certificate of registration",
-  "Current mayor's/business permit",
-  "Banking verification details",
-  "Trade references (minimum 2)",
-  "PEP/sanctions and adverse media declarations",
-];
-
-const enhancedDdTriggers = [
-  "High-risk country links",
-  "PEP status confirmed",
-  "Deal size above threshold",
-  "Negative news/adverse media",
-  "Sensitive data processing",
-  "Regulated sector involvement",
-];
+type MemberDocument = {
+  id: string;
+  document_type: string;
+  status: "submitted" | "under-review" | "approved" | "rejected";
+  file_path: string;
+  uploaded_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  reject_reason: string | null;
+};
 
 export default function DocumentsPage() {
-  const handleUploadDocument = (documentType: string) => {
-    console.log("upload-document", documentType);
+  const supabase = useMemo(() => createClient(), []);
+  const { user } = useAuth();
+  const [docs, setDocs] = useState<MemberDocument[]>([]);
+
+  const load = async () => {
+    if (!user?.id) return;
+    const next = (await fetchDocuments(supabase, user.id)) as MemberDocument[];
+    setDocs(next);
   };
 
-  const handleViewDocument = (documentId: string) => {
-    console.log("view-document", documentId);
+  useEffect(() => {
+    void load();
+  }, [user?.id]);
+
+  const submitPlaceholder = async (documentType: string) => {
+    if (!user?.id) return;
+    const { error } = await createPlaceholderDocument(
+      supabase,
+      user.id,
+      documentType,
+    );
+    if (error) {
+      window.alert(error);
+      return;
+    }
+    await load();
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      "submitted": "bg-yellow-100 text-yellow-700",
-      "under-review": "bg-blue-100 text-blue-700",
-      "approved": "bg-green-100 text-green-700",
-      "rejected": "bg-red-100 text-red-700",
-    };
-    return colors[status] || "bg-gray-100 text-gray-700";
-  };
+  const byType = new Map(docs.map((d) => [d.document_type, d]));
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)]">
-      {/* Header */}
-      <section className="border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-[5%] py-12">
-        <div className="mx-auto max-w-[1280px]">
+    <div className="min-h-screen bg-(--color-canvas)">
+      <section className="border-b border-(--color-hairline) bg-(--color-surface-soft) px-[5%] py-10">
+        <div className="mx-auto max-w-7xl">
           <Link
             href="/dashboard"
-            className="text-sm font-500 text-[var(--color-primary)] hover:underline"
+            className="text-sm text-(--color-primary) hover:underline"
           >
-            ← Back to dashboard
+            Back to dashboard
           </Link>
-          <h1 className="mt-4 text-3xl font-700 text-[var(--color-ink)]">
+          <h1 className="mt-3 text-3xl font-semibold text-(--color-ink)">
             Documents
           </h1>
-          <p className="mt-2 text-[var(--color-body)]">
-            Stage 2 verification requires SEC and DTI documents
+          <p className="mt-2 text-sm text-(--color-body)">
+            Stage 2 requires Light KYC document approval before matching unlock.
           </p>
         </div>
       </section>
 
-      {/* Main Content */}
-      <div className="px-[5%] py-12">
-        <div className="mx-auto max-w-[1280px]">
-          {/* Stage 2 Requirements */}
-          <section className="mb-12">
-            <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
-              Light KYC (Stage 2)
-            </h2>
-            <div className="space-y-4">
-              {requiredDocuments.map((req) => (
-                <div
-                  key={req.type}
-                  className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-600 text-[var(--color-ink)]">
-                        {DOCUMENT_TYPES[req.type]}
-                      </h3>
-                      <p className="mt-1 text-sm text-[var(--color-body)]">
-                        Required for Stage 2 verification
-                      </p>
-                    </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-600 ${getStatusColor(req.status)}`}>
-                      {req.status === 'approved' ? '✓ Approved' : req.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
-              Full KYC (Stage 3)
-            </h2>
-            <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6">
-              <p className="text-sm text-[var(--color-body)]">
-                Full KYC extends Stage 2 checks and is required before Stage 3 deal execution.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
-                {fullKycChecklist.map((item) => (
-                  <li key={item}>- {item}</li>
-                ))}
-              </ul>
-              <button
-                onClick={() => handleUploadDocument("full-kyc-batch")}
-                className="mt-6 rounded-lg bg-[var(--color-primary)] px-6 py-2 font-500 text-white hover:bg-[var(--color-primary-active)]"
+      <div className="mx-auto max-w-7xl space-y-8 px-[5%] py-10">
+        <section className="grid gap-4 md:grid-cols-2">
+          {REQUIRED_TYPES.map((type) => {
+            const row = byType.get(type);
+            return (
+              <div
+                key={type}
+                className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas) p-5"
               >
-                Submit full KYC pack
-              </button>
-            </div>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
-              Enhanced Due Diligence (Trigger-Based)
-            </h2>
-            <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6">
-              <p className="text-sm text-[var(--color-body)]">
-                Enhanced DD is activated when a risk trigger is detected.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--color-body)]">
-                {enhancedDdTriggers.map((item) => (
-                  <li key={item}>- {item}</li>
-                ))}
-              </ul>
-              <div className="mt-6 rounded-lg bg-[var(--color-surface-soft)] p-4 text-sm text-[var(--color-body)]">
-                Typical outputs: risk classification (Low/Medium/High), access decision, and expiry alerts at 30 and 7 days.
+                <h2 className="text-base font-semibold text-(--color-ink)">
+                  {type}
+                </h2>
+                <p className="mt-2 text-sm text-(--color-body)">
+                  Status: {row?.status || "missing"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => submitPlaceholder(type)}
+                  className="mt-4 gn-btn-primary"
+                >
+                  Submit {type}
+                </button>
               </div>
-            </div>
-          </section>
+            );
+          })}
+        </section>
 
-          {/* Uploaded Documents */}
-          <section className="mb-12">
-            <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
-              Your documents
-            </h2>
-            <div className="space-y-4">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-600 text-[var(--color-ink)]">
-                        {DOCUMENT_TYPES[doc.type]}
-                      </h3>
-                      <p className="mt-1 text-sm text-[var(--color-muted)]">
-                        {doc.fileName}
-                      </p>
-                      <div className="mt-2 flex gap-4 text-xs text-[var(--color-muted)]">
-                        <span>📤 Uploaded: {doc.uploadedAt}</span>
-                        {doc.reviewedAt && (
-                          <span>✅ Reviewed: {doc.reviewedAt}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`rounded-full px-3 py-1 text-xs font-600 ${getStatusColor(doc.status)}`}>
-                        {doc.status === 'approved' ? '✓ Approved' :
-                         doc.status === 'under-review' ? '⏳ Under Review' :
-                         doc.status === 'submitted' ? '📤 Submitted' : '✗ Rejected'}
-                      </span>
-                      <button
-                        onClick={() => handleViewDocument(doc.id)}
-                        className="text-sm font-500 text-[var(--color-primary)] hover:underline"
-                      >
-                        View
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-(--color-ink)">
+            Uploaded documents
+          </h2>
+          {docs.length === 0 ? (
+            <div className="rounded-[16px] border border-(--color-hairline) bg-(--color-surface-soft) p-6 text-sm text-(--color-body)">
+              No documents uploaded yet.
             </div>
-          </section>
-
-          {/* Upload Section */}
-          <section className="mb-12">
-            <h2 className="mb-6 text-xl font-600 text-[var(--color-ink)]">
-              Upload documents
-            </h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              {Object.entries(DOCUMENT_TYPES).map(([type, label]) => (
-                <div
-                  key={type}
-                  className="rounded-lg border-2 border-dashed border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-8 text-center"
-                >
-                  <div className="text-4xl mb-4">📄</div>
-                  <h3 className="font-600 text-[var(--color-ink)]">
-                    {label}
-                  </h3>
-                  <p className="mt-2 text-sm text-[var(--color-muted)]">
-                    PDF format, max 10MB
-                  </p>
-                  <button
-                    onClick={() => handleUploadDocument(type)}
-                    className="mt-4 rounded-lg bg-[var(--color-primary)] px-6 py-2 font-500 text-white hover:bg-[var(--color-primary-active)]"
-                  >
-                    Upload
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Info Box */}
-          <div className="rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-6">
-            <p className="text-sm font-600 text-[var(--color-muted)] uppercase">
-              Document verification process
-            </p>
-            <ul className="mt-4 space-y-3 text-sm text-[var(--color-body)]">
-              <li>• Documents are reviewed within 24-48 hours by Growth Advisors</li>
-              <li>• Once approved, your profile automatically upgrades to Stage 2</li>
-              <li>• Stage 2 unlocks full matching visibility and deal flow</li>
-              <li>• All documents are stored securely and encrypted</li>
-            </ul>
-          </div>
-        </div>
+          ) : (
+            docs.map((doc) => (
+              <article
+                key={doc.id}
+                className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas) p-5"
+              >
+                <p className="text-sm font-semibold text-(--color-ink)">
+                  {doc.document_type}
+                </p>
+                <p className="mt-1 text-sm text-(--color-body)">
+                  {doc.file_path}
+                </p>
+                <p className="mt-1 text-xs text-(--color-muted)">
+                  Status: {doc.status}
+                </p>
+              </article>
+            ))
+          )}
+        </section>
       </div>
     </div>
   );

@@ -19,18 +19,16 @@ export default function TopHeader() {
   const { signedIn, signOut, isInvitedAccount } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--color-hairline)] bg-[var(--color-nav-bg)] backdrop-blur-sm">
-      <div className="mx-auto flex h-[80px] w-full max-w-[1280px] items-center justify-between px-[5%]">
+    <header className="sticky top-0 z-40 border-b border-(--color-hairline) bg-(--color-nav-bg) backdrop-blur-sm">
+      <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-[5%]">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
-          <div className="text-2xl font-bold text-[var(--color-primary)]">
-            ♥
-          </div>
+          <div className="text-2xl font-bold text-(--color-primary)">♥</div>
           <div>
-            <p className="text-sm font-semibold text-[var(--color-ink)]">
+            <p className="text-sm font-semibold text-(--color-ink)">
               Growth Network
             </p>
-            <p className="text-xs text-[var(--color-muted)]">by Exoasia</p>
+            <p className="text-xs text-(--color-muted)">by Exoasia</p>
           </div>
         </Link>
 
@@ -38,33 +36,13 @@ export default function TopHeader() {
         <div className="flex items-center gap-4">
           {signedIn ? (
             <>
-              <nav className="hidden items-center gap-4 lg:flex">
-                {(isInvitedAccount
-                  ? [{ href: "/accept-invite", label: "Accept Invite" }]
-                  : signedInNavLinks
-                ).map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="text-sm font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)]"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-              <Link
-                href={isInvitedAccount ? "/accept-invite" : "/dashboard"}
-                className="text-base font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)] lg:hidden"
-              >
-                {isInvitedAccount ? "Accept Invite" : "Dashboard"}
-              </Link>
               <button
                 type="button"
                 onClick={async () => {
                   await signOut();
                   router.push("/");
                 }}
-                className="rounded-full bg-[var(--color-ink)] px-6 py-2 text-sm font-600 text-white hover:bg-[var(--color-body)]"
+                className="rounded-full bg-(--color-ink) px-6 py-2 text-sm font-600 text-white hover:bg-(--color-body)"
               >
                 Sign out
               </button>
@@ -73,7 +51,7 @@ export default function TopHeader() {
             <>
               <Link
                 href="/"
-                className="text-base font-500 text-[var(--color-ink)] hover:text-[var(--color-muted)]"
+                className="text-base font-500 text-(--color-ink) hover:text-(--color-muted)"
               >
                 Sign in
               </Link>

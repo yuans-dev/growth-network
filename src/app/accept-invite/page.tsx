@@ -46,7 +46,7 @@ export default function AcceptInvitePage() {
       setError(updateError);
       return;
     }
-    router.push("/dashboard");
+    router.push("/onboarding");
   };
 
   return (
@@ -177,7 +177,7 @@ export default function AcceptInvitePage() {
             disabled={!canSubmit}
             className="w-full rounded-lg bg-[var(--color-primary)] py-3 font-600 text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Activate Account
+            Accept Invitation
           </button>
         </form>
       </div>

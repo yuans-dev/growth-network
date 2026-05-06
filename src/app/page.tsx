@@ -1,17 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./providers";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
   const router = useRouter();
-  const { signedIn, signInWithPassword, user, isInvitedAccount } = useAuth();
+  const { signedIn, signInWithPassword, isInvitedAccount } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    const redirectBasedOnProfile = async () => {
+      // invited accounts still go to accept-claim
+      if (isInvitedAccount) {
+        router.replace("/accept-invite");
+        return;
+      }
+
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.getUser();
+        const userId = data?.user?.id;
+        if (!userId) {
+          router.replace("/dashboard");
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, full_name, sector")
+          .eq("id", userId)
+          .single();
+
+        const needsOnboarding =
+          !profile || !profile.full_name || !profile.sector;
+        router.replace(needsOnboarding ? "/onboarding" : "/dashboard");
+      } catch (err) {
+        console.error("Error checking profile for onboarding:", err);
+        router.replace("/dashboard");
+      }
+    };
+
+    redirectBasedOnProfile();
+  }, [signedIn, isInvitedAccount, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +72,32 @@ export default function Home() {
     }
 
     const accountStatus = signedInUser?.user_metadata?.account_status;
-    router.push(accountStatus === "invited" ? "/accept-invite" : "/dashboard");
+    if (accountStatus === "invited") {
+      router.push("/accept-invite");
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      const userId = data?.user?.id;
+
+      if (!userId) {
+        router.push("/dashboard");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, full_name, sector")
+        .eq("id", userId)
+        .single();
+
+      const needsOnboarding = !profile || !profile.full_name || !profile.sector;
+      router.push(needsOnboarding ? "/onboarding" : "/dashboard");
+    } catch {
+      router.push("/dashboard");
+    }
   };
 
   const handleLoginInputChange = (field: string, value: string) => {
@@ -47,71 +109,7 @@ export default function Home() {
     <div className="min-h-screen bg-[var(--color-canvas)]">
       <main className="px-[5%] py-20">
         <div className="mx-auto max-w-[640px] text-center">
-          {signedIn && !showLogin ? (
-            <div className="space-y-8 rounded-[20px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-8">
-              <h1 className="font-display text-4xl font-700 text-[var(--color-ink)]">
-                Welcome back{user?.email ? `, ${user.email}` : ""}
-              </h1>
-              <p className="mt-4 text-lg text-[var(--color-body)]">
-                You're already signed in for testing. Use the header links to
-                navigate to dashboard and other pages.
-              </p>
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(
-                    isInvitedAccount ? "/accept-invite" : "/dashboard",
-                  )
-                }
-                className="gn-btn-primary"
-              >
-                {isInvitedAccount ? "Complete Invite Claim" : "Go to Dashboard"}
-              </button>
-              <div className="mt-8 rounded-[20px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-6 text-left">
-                <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[var(--color-muted)]">
-                  Quick access
-                </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <Link
-                    href="/dashboard"
-                    className="gn-btn-secondary w-full text-center"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/matches"
-                    className="gn-btn-secondary w-full text-center"
-                  >
-                    Matches
-                  </Link>
-                  <Link
-                    href="/deal-board"
-                    className="gn-btn-secondary w-full text-center"
-                  >
-                    Deal Board
-                  </Link>
-                  <Link
-                    href="/events"
-                    className="gn-btn-secondary w-full text-center"
-                  >
-                    Events
-                  </Link>
-                  <Link
-                    href="/documents"
-                    className="gn-btn-secondary w-full text-center"
-                  >
-                    Documents
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="gn-btn-secondary w-full text-center"
-                  >
-                    Profile
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : showLogin ? (
+          {showLogin ? (
             <div className="space-y-8">
               <div>
                 <h1 className="font-display text-4xl font-700 text-[var(--color-ink)]">

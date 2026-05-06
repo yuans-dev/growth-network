@@ -32,12 +32,19 @@ supabase --version
 
 3) Create `.env.local`
 
-Create a `.env.local` in the project root with the following variables:
+Create a `.env.local` in the project root. You can copy the supplied example:
 
-```bash
+```powershell
+copy .env.local.example .env.local
+```
+
+Then open `.env.local` and fill values for:
+
+```
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+GEMINI_API_KEY=
 ```
 
 Where to get values:
@@ -65,6 +72,21 @@ Open http://localhost:3000.
 supabase start
 supabase stop
 supabase status
+npm run seed:invited
+```
+
+Seed with custom credentials:
+
+```bash
+npm run seed:invited -- invited.member@example.com "Invite123!"
+```
+
+On Windows PowerShell you can run the seed command with inline env vars like this:
+
+```powershell
+$env:NEXT_PUBLIC_SUPABASE_URL='https://your-project-ref.supabase.co';
+$env:SUPABASE_SERVICE_ROLE_KEY='service-role-key';
+node scripts/seed-invited-account.mjs
 ```
 
 ## Notes

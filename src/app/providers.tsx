@@ -3,12 +3,14 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   signedIn: boolean;
   isInvitedAccount: boolean;
+  role: string | null;
   isLoading: boolean;
   signInWithPassword: (
     email: string,
@@ -72,6 +74,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       session,
       signedIn: !!user,
       isInvitedAccount: user?.user_metadata?.account_status === "invited",
+      role: getRoleFromAccessToken(session?.access_token),
       isLoading,
       signInWithPassword: async (email: string, password: string) => {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -89,7 +92,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         setSession(null);
         setUser(null);
       },
-      completeInviteClaim: async ({ name, password }) => {
+      completeInviteClaim: async ({
+        name,
+        password,
+      }: {
+        name: string;
+        password: string;
+      }) => {
         const { error } = await supabase.auth.updateUser({
           password,
           data: {
