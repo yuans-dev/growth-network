@@ -50,7 +50,7 @@ export default function TopHeader() {
           ) : (
             <>
               <Link
-                href="/"
+                href="/sign-in"
                 className="text-base font-500 text-(--color-ink) hover:text-(--color-muted)"
               >
                 Sign in
