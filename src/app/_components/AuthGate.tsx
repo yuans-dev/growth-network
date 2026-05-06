@@ -5,7 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../providers";
 import { createClient } from "@/lib/supabase/client";
 
-const PUBLIC_PATHS = ["/", "/onboarding", "/accept-invite"];
+const PUBLIC_PATHS = [
+  "/",
+  "/sign-in",
+  "/onboarding",
+  "/accept-invite",
+  "/get-invited",
+];
 const PROTECTED_PATH_PREFIXES = [
   "/dashboard",
   "/profile",
@@ -33,7 +39,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     );
 
     if (!signedIn && isProtectedPath) {
-      router.replace("/");
+      router.replace("/sign-in");
       return;
     }
 
@@ -77,7 +83,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     }
 
     if (!signedIn && !isPublicPath) {
-      router.replace("/");
+      router.replace("/sign-in");
     }
   }, [signedIn, isInvitedAccount, pathname, router, isLoading]);
 

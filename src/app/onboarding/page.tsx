@@ -90,6 +90,10 @@ export default function OnboardingForm() {
         const { data } = await supabase.auth.getUser();
         const userId = data?.user?.id;
         if (!userId) return;
+        const metadataFullName =
+          typeof data.user?.user_metadata?.full_name === "string"
+            ? data.user.user_metadata.full_name.trim()
+            : "";
 
         // Load existing profile if present
         const { data: profile } = await supabase
@@ -103,7 +107,8 @@ export default function OnboardingForm() {
         if (profile && mounted) {
           setForm((prev) => ({
             ...prev,
-            full_name: profile.full_name ?? prev.full_name,
+            full_name:
+              (profile.full_name ?? metadataFullName) || prev.full_name,
             business_name: profile.business_name ?? prev.business_name,
             role_title: profile.role_title ?? prev.role_title,
             city: profile.city ?? prev.city,
@@ -131,6 +136,18 @@ export default function OnboardingForm() {
             asks_summary: profile.asks_summary ?? prev.asks_summary,
             offers_summary: profile.offers_summary ?? prev.offers_summary,
           }));
+          return;
+        }
+
+        if (mounted && metadataFullName) {
+          setForm((prev) =>
+            prev.full_name.trim()
+              ? prev
+              : {
+                  ...prev,
+                  full_name: metadataFullName,
+                },
+          );
         }
       } catch (err) {
         // ignore

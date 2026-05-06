@@ -2,7 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
-const PUBLIC_PATHS = ["/", "/onboarding", "/accept-invite", "/not-authorized"];
+const PUBLIC_PATHS = [
+  "/",
+  "/onboarding",
+  "/accept-invite",
+  "/not-authorized",
+  "/get-invited",
+];
 const PROTECTED_PATH_PREFIXES = [
   "/dashboard",
   "/profile",
