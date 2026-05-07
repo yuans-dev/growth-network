@@ -1,22 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../providers";
-
-const signedInNavLinks = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/matches", label: "Matches" },
-  { href: "/deal-board", label: "Deal Board" },
-  { href: "/documents", label: "Documents" },
-  { href: "/events", label: "Events" },
-  { href: "/payments", label: "Payments" },
-  { href: "/profile", label: "Profile" },
-];
+import { getHomePathForRole } from "@/lib/auth/access";
 
 export default function TopHeader() {
   const router = useRouter();
-  const { signedIn, signOut, isInvitedAccount } = useAuth();
+  const pathname = usePathname();
+  const { signedIn, signOut, isInvitedAccount, role } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 border-b border-(--color-hairline) bg-(--color-nav-bg) backdrop-blur-sm">
@@ -34,8 +26,28 @@ export default function TopHeader() {
 
         {/* CTA Buttons */}
         <div className="flex items-center gap-4">
+          {signedIn && pathname !== getHomePathForRole(role) && (
+            <Link
+              href={getHomePathForRole(role)}
+              className="text-sm text-(--color-muted) hover:underline"
+            >
+              Back to dashboard
+            </Link>
+          )}
           {signedIn ? (
             <>
+              {/** Advisor tools quick link for elevated roles */}
+              {isInvitedAccount === false &&
+                role &&
+                ["advisor", "staff", "admin"].includes(role) && (
+                  <Link
+                    href="/advisor/manual-match"
+                    className="text-sm text-(--color-primary) hover:underline"
+                  >
+                    Advisor tools
+                  </Link>
+                )}
+
               <button
                 type="button"
                 onClick={async () => {

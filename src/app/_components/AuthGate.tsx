@@ -4,41 +4,21 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "../providers";
 import { createClient } from "@/lib/supabase/client";
-
-const PUBLIC_PATHS = [
-  "/",
-  "/sign-in",
-  "/onboarding",
-  "/accept-invite",
-  "/get-invited",
-];
-const PROTECTED_PATH_PREFIXES = [
-  "/dashboard",
-  "/profile",
-  "/matches",
-  "/deal-board",
-  "/documents",
-  "/events",
-  "/payments",
-  "/stage-1",
-  "/stage-2",
-  "/stage-3",
-  "/stage-4",
-];
+import {
+  canAccessPath,
+  getHomePathForRole,
+  isPublicPath,
+} from "@/lib/auth/access";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { signedIn, isInvitedAccount, isLoading } = useAuth();
+  const { signedIn, isInvitedAccount, isLoading, role } = useAuth();
 
   useEffect(() => {
     if (isLoading) return;
-    const isPublicPath = PUBLIC_PATHS.includes(pathname);
-    const isProtectedPath = PROTECTED_PATH_PREFIXES.some((prefix) =>
-      pathname.startsWith(prefix),
-    );
 
-    if (!signedIn && isProtectedPath) {
+    if (!signedIn && !isPublicPath(pathname)) {
       router.replace("/sign-in");
       return;
     }
@@ -72,7 +52,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
           const needsOnboarding =
             !profile || !profile.full_name || !profile.sector;
-          router.replace(needsOnboarding ? "/onboarding" : "/dashboard");
+          const nextPath = needsOnboarding ? "/onboarding" : "/dashboard";
+          router.replace(nextPath);
         } catch {
           router.replace("/dashboard");
         }
@@ -82,10 +63,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!signedIn && !isPublicPath) {
-      router.replace("/sign-in");
+    if (signedIn && !canAccessPath(pathname, role)) {
+      router.replace(getHomePathForRole(role));
     }
-  }, [signedIn, isInvitedAccount, pathname, router, isLoading]);
+  }, [signedIn, isInvitedAccount, pathname, router, isLoading, role]);
 
   return <>{children}</>;
 }

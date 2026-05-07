@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "../providers";
+import { getRoleFromAccessToken } from "@/lib/auth/jwt";
+import { getSignedInRedirectPath } from "@/lib/auth/access";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -24,6 +26,10 @@ export default function SignInPage() {
 
       try {
         const supabase = createClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token ?? null;
+        const role = getRoleFromAccessToken(accessToken);
+
         const { data } = await supabase.auth.getUser();
         const userId = data?.user?.id;
         if (!userId) {
@@ -39,7 +45,13 @@ export default function SignInPage() {
 
         const needsOnboarding =
           !profile || !profile.full_name || !profile.sector;
-        router.replace(needsOnboarding ? "/onboarding" : "/dashboard");
+        router.replace(
+          getSignedInRedirectPath({
+            role,
+            isInvitedAccount,
+            needsOnboarding,
+          }),
+        );
       } catch {
         router.replace("/dashboard");
       }
@@ -77,6 +89,10 @@ export default function SignInPage() {
 
     try {
       const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token ?? null;
+      const role = getRoleFromAccessToken(accessToken);
+
       const { data } = await supabase.auth.getUser();
       const userId = data?.user?.id;
 
@@ -92,7 +108,14 @@ export default function SignInPage() {
         .single();
 
       const needsOnboarding = !profile || !profile.full_name || !profile.sector;
-      router.push(needsOnboarding ? "/onboarding" : "/dashboard");
+      router.push(
+        getSignedInRedirectPath({
+          role,
+          isInvitedAccount:
+            signedInUser?.user_metadata?.account_status === "invited",
+          needsOnboarding,
+        }),
+      );
     } catch {
       router.push("/dashboard");
     }

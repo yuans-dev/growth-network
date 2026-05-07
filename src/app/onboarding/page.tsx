@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "../providers";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getHomePathForRole } from "@/lib/auth/access";
 
 const sectorOptions = [
   "Fintech",
@@ -55,6 +57,7 @@ const dinnerOptions = ["Yes", "Maybe", "No"];
 export default function OnboardingForm() {
   const router = useRouter();
   const supabase = createClient();
+  const { role } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -85,6 +88,10 @@ export default function OnboardingForm() {
 
   useEffect(() => {
     let mounted = true;
+    if (role && ["advisor", "staff", "admin"].includes(role)) {
+      router.replace(getHomePathForRole(role));
+      return;
+    }
     (async () => {
       try {
         const { data } = await supabase.auth.getUser();

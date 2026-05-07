@@ -1,41 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getRoleFromAccessToken } from "@/lib/auth/jwt";
-
-const PUBLIC_PATHS = [
-  "/",
-  "/onboarding",
-  "/accept-invite",
-  "/not-authorized",
-  "/get-invited",
-];
-const PROTECTED_PATH_PREFIXES = [
-  "/dashboard",
-  "/profile",
-  "/matches",
-  "/deal-board",
-  "/documents",
-  "/events",
-  "/payments",
-  "/stage-1",
-  "/stage-2",
-  "/stage-3",
-  "/stage-4",
-];
+import {
+  canAccessPath,
+  getHomePathForRole,
+  isPublicPath,
+} from "@/lib/auth/access";
 const ADMIN_PATH_PREFIXES = ["/admin"];
-
-function isProtectedPath(pathname: string) {
-  return PROTECTED_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function isAdminPath(pathname: string) {
-  return ADMIN_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/_next")) {
+  if (isPublicPath(pathname) || pathname.startsWith("/_next")) {
     return NextResponse.next();
   }
 
@@ -67,19 +43,28 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && isProtectedPath(pathname)) {
+  if (!user && !isPublicPath(pathname)) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/";
+    redirectUrl.pathname = "/sign-in";
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && isAdminPath(pathname)) {
+  if (user) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
     const role = getRoleFromAccessToken(session?.access_token);
 
-    if (role !== "admin") {
+    if (!canAccessPath(pathname, role)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = getHomePathForRole(role);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (
+      ADMIN_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix)) &&
+      role !== "admin"
+    ) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/not-authorized";
       return NextResponse.redirect(redirectUrl);

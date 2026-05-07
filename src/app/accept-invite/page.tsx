@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers";
+import { getHomePathForRole } from "@/lib/auth/access";
 
 export default function AcceptInvitePage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function AcceptInvitePage() {
     isInvitedAccount,
     signInWithPassword,
     completeInviteClaim,
+    role,
   } = useAuth();
   const [authData, setAuthData] = useState({ email: "", password: "" });
   const [authSubmitting, setAuthSubmitting] = useState(false);
@@ -68,7 +70,7 @@ export default function AcceptInvitePage() {
       setError(updateError);
       return;
     }
-    router.push("/onboarding");
+    router.push(getHomePathForRole(role));
   };
 
   const handleSignIn = async (event: FormEvent<HTMLFormElement>) => {

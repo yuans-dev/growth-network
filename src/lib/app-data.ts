@@ -12,6 +12,41 @@ export type MatchRecord = {
   created_at: string;
 };
 
+export type AdvisorCompanyRecord = {
+  id: string;
+  business_name: string | null;
+  full_name: string | null;
+  sector: string | null;
+  stage: string | null;
+  verification_status: string | null;
+};
+
+export type AdvisorMatchRecord = MatchRecord;
+
+export async function fetchAdvisorDashboardData(supabase: SupabaseClient) {
+  const [profilesResponse, matchesResponse] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(
+        "id, business_name, full_name, sector, stage, verification_status",
+      )
+      .order("full_name", { ascending: true }),
+    supabase
+      .from("matches")
+      .select(
+        "id, member_a_id, member_b_id, fit_score, summary, status, member_a_status, member_b_status, created_at",
+      )
+      .in("status", ["pending", "accepted", "declined", "introduced"])
+      .order("created_at", { ascending: false })
+      .limit(500),
+  ]);
+
+  return {
+    companies: (profilesResponse.data ?? []) as AdvisorCompanyRecord[],
+    matches: (matchesResponse.data ?? []) as AdvisorMatchRecord[],
+  };
+}
+
 export async function fetchDashboardSummary(
   supabase: SupabaseClient,
   userId: string,

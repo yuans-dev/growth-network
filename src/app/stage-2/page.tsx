@@ -43,7 +43,11 @@ const leadership = [
   },
 ];
 
+import { useAuth } from "../providers";
+import Link from "next/link";
+
 export default function StageTwoPage() {
+  const { role } = useAuth();
   const handleSubmitDocs = () => {
     console.log("stage-2-submit-docs");
   };
@@ -106,13 +110,20 @@ export default function StageTwoPage() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <button
-              className="mt-8 gn-btn-primary"
-              type="button"
-              onClick={handleSubmitDocs}
-            >
-              Submit documents -&gt;
-            </button>
+            <div className="mt-8 flex gap-4">
+              <button
+                className="gn-btn-primary"
+                type="button"
+                onClick={handleSubmitDocs}
+              >
+                Submit documents -&gt;
+              </button>
+              {role && ["advisor", "staff", "admin"].includes(role) && (
+                <Link href="/advisor/manual-match" className="gn-btn-secondary">
+                  Advisor tools
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </section>

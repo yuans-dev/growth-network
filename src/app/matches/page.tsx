@@ -2,19 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../providers";
 import { createClient } from "@/lib/supabase/client";
 import {
   fetchUserMatches,
   respondToMatch,
   type MatchRecord,
 } from "@/lib/app-data";
-import { useAuth } from "../providers";
+import { getHomePathForRole } from "@/lib/auth/access";
 
 type UIMatch = MatchRecord & { counterpart_name: string | null };
 
 export default function MatchesPage() {
   const supabase = useMemo(() => createClient(), []);
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const router = useRouter();
   const [matches, setMatches] = useState<UIMatch[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -26,8 +29,13 @@ export default function MatchesPage() {
   };
 
   useEffect(() => {
+    if (role && ["advisor", "admin"].includes(role)) {
+      router.replace(getHomePathForRole(role));
+      return;
+    }
+
     void loadMatches();
-  }, [user?.id]);
+  }, [role, router, user?.id]);
 
   const handleDecision = async (
     match: UIMatch,
@@ -79,14 +87,16 @@ export default function MatchesPage() {
             Your matches
           </h1>
           <div className="mt-4">
-            <button
-              type="button"
-              onClick={handleGenerateAIMatches}
-              className="gn-btn-primary"
-              disabled={isGenerating}
-            >
-              {isGenerating ? "Generating..." : "Generate AI Matches"}
-            </button>
+            {role !== "advisor" && role !== "admin" && (
+              <button
+                type="button"
+                onClick={handleGenerateAIMatches}
+                className="gn-btn-primary"
+                disabled={isGenerating}
+              >
+                {isGenerating ? "Generating..." : "Generate AI Matches"}
+              </button>
+            )}
           </div>
         </div>
       </section>

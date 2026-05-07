@@ -1,5 +1,8 @@
 "use client";
 
+import { useAuth } from "../providers";
+import Link from "next/link";
+
 const unlocks = [
   {
     title: "Due diligence framework",
@@ -24,6 +27,7 @@ const portalActions = [
 ];
 
 export default function StageFourPage() {
+  const { role } = useAuth();
   const handleGate = (route: string) => {
     console.log("stage-4-gate", route);
   };
@@ -50,6 +54,13 @@ export default function StageFourPage() {
             Execution is gated. Only active, advisor-approved deals progress
             into Stage 4 workflows.
           </p>
+          {role && ["advisor", "staff", "admin"].includes(role) && (
+            <div className="mt-8">
+              <Link href="/advisor/manual-match" className="gn-btn-secondary">
+                Advisor tools
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

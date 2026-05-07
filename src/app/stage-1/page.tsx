@@ -82,7 +82,11 @@ const benefits = [
   "Structured intake to define ASK and OFFER.",
 ];
 
+import { useAuth } from "../providers";
+import Link from "next/link";
+
 export default function StageOnePage() {
+  const { role } = useAuth();
   const handleActivate = () => {
     console.log("stage-1-activate");
   };
@@ -118,6 +122,11 @@ export default function StageOnePage() {
             >
               Activate Stage 01 -&gt;
             </button>
+            {role && ["advisor", "staff", "admin"].includes(role) && (
+              <Link href="/advisor/manual-match" className="gn-btn-secondary">
+                Advisor tools
+              </Link>
+            )}
             <button className="gn-btn-secondary" type="button">
               View events
             </button>

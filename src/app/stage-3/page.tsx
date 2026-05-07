@@ -1,5 +1,8 @@
 "use client";
 
+import { useAuth } from "../providers";
+import Link from "next/link";
+
 const howItWorks = [
   {
     title: "AI scoring",
@@ -62,6 +65,7 @@ const faq = [
 ];
 
 export default function StageThreePage() {
+  const { role } = useAuth();
   const handlePathway = (name: string) => {
     console.log("stage-3-pathway", name);
   };
@@ -90,6 +94,13 @@ export default function StageThreePage() {
             Matching is now live. AI signals surface candidates, advisors
             decide, and consent controls every introduction.
           </p>
+          {role && ["advisor", "staff", "admin"].includes(role) && (
+            <div className="mt-8">
+              <Link href="/advisor/manual-match" className="gn-btn-secondary">
+                Advisor tools
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

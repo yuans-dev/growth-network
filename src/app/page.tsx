@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./providers";
 import { createClient } from "@/lib/supabase/client";
+import { getRoleFromAccessToken } from "@/lib/auth/jwt";
+import { getSignedInRedirectPath } from "@/lib/auth/access";
 
 export default function Home() {
   const router = useRouter();
@@ -21,6 +23,10 @@ export default function Home() {
 
       try {
         const supabase = createClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token ?? null;
+        const tokenRole = getRoleFromAccessToken(accessToken);
+
         const { data } = await supabase.auth.getUser();
         const userId = data?.user?.id;
         if (!userId) {
@@ -36,7 +42,13 @@ export default function Home() {
 
         const needsOnboarding =
           !profile || !profile.full_name || !profile.sector;
-        router.replace(needsOnboarding ? "/onboarding" : "/dashboard");
+        router.replace(
+          getSignedInRedirectPath({
+            role: tokenRole,
+            isInvitedAccount,
+            needsOnboarding,
+          }),
+        );
       } catch (err) {
         console.error("Error checking profile for onboarding:", err);
         router.replace("/dashboard");

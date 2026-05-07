@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateGeminiMatches } from "@/lib/ai/gemini";
+import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
 type CandidateSignal = {
   member_id: string;
@@ -9,6 +10,12 @@ type CandidateSignal = {
   description: string;
   status: string;
 };
+
+function canonicalPair(memberAId: string, memberBId: string) {
+  return memberAId < memberBId
+    ? { member_a_id: memberAId, member_b_id: memberBId }
+    : { member_a_id: memberBId, member_b_id: memberAId };
+}
 
 export async function POST() {
   try {
@@ -20,6 +27,14 @@ export async function POST() {
 
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Block advisors from using the AI matching generation endpoint
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token ?? null;
+    const tokenRole = getRoleFromAccessToken(accessToken);
+    if (tokenRole && ["advisor", "admin"].includes(tokenRole)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { data: subjectProfile, error: subjectError } = await supabase
@@ -70,6 +85,21 @@ export async function POST() {
       }, new Map<string, CandidateSignal[]>());
     }
 
+    const allRelevantIds = Array.from(new Set([user.id, ...candidateIds]));
+    const { data: existingMatches } = await supabase
+      .from("matches")
+      .select("member_a_id, member_b_id")
+      .or(
+        `member_a_id.in.(${allRelevantIds.join(",")}),member_b_id.in.(${allRelevantIds.join(",")})`,
+      );
+
+    const existingPairKeys = new Set(
+      (existingMatches ?? []).map((match) => {
+        const pair = canonicalPair(match.member_a_id, match.member_b_id);
+        return `${pair.member_a_id}:${pair.member_b_id}`;
+      }),
+    );
+
     const payload = {
       subject: {
         ...subjectProfile,
@@ -90,16 +120,22 @@ export async function POST() {
       .or(`member_a_id.eq.${user.id},member_b_id.eq.${user.id}`)
       .eq("status", "pending");
     console.log("Recommendations from Gemini:", recommendations);
-    const rows = recommendations.map((rec) => ({
-      member_a_id: user.id,
-      member_b_id: rec.counterpart_id,
-      fit_score: rec.fit_score,
-      summary: rec.summary,
-      rationale: rec.rationale,
-      status: "pending",
-      member_a_status: "pending",
-      member_b_status: "pending",
-    }));
+    const rows = recommendations
+      .map((rec) => {
+        const pair = canonicalPair(user.id, rec.counterpart_id);
+        return {
+          ...pair,
+          fit_score: rec.fit_score,
+          summary: rec.summary,
+          rationale: rec.rationale,
+          status: "pending",
+          member_a_status: "pending",
+          member_b_status: "pending",
+        };
+      })
+      .filter(
+        (row) => !existingPairKeys.has(`${row.member_a_id}:${row.member_b_id}`),
+      );
 
     if (rows.length > 0) {
       const { error: insertError } = await supabase

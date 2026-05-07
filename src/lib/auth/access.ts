@@ -1,0 +1,76 @@
+export type AppRole = string | null | undefined;
+
+export const PUBLIC_PATHS = [
+  "/",
+  "/sign-in",
+  "/onboarding",
+  "/accept-invite",
+  "/get-invited",
+  "/not-authorized",
+] as const;
+
+export const MEMBER_PATH_PREFIXES = [
+  "/dashboard",
+  "/profile",
+  "/matches",
+  "/deal-board",
+  "/documents",
+  "/events",
+  "/payments",
+  "/stage-1",
+  "/stage-2",
+  "/stage-3",
+  "/stage-4",
+] as const;
+
+export const ADVISOR_PATH_PREFIXES = [
+  "/advisor/manual-match",
+  "/advisor/network-graph",
+] as const;
+export const ADMIN_PATH_PREFIXES = ["/admin"] as const;
+
+export function isPublicPath(pathname: string) {
+  return PUBLIC_PATHS.includes(pathname as (typeof PUBLIC_PATHS)[number]);
+}
+
+export function getRoleAccessPrefixes(role: AppRole) {
+  if (role === "advisor") {
+    return ["/dashboard", ...ADVISOR_PATH_PREFIXES];
+  }
+
+  if (role === "admin") {
+    return ["/dashboard", ...ADVISOR_PATH_PREFIXES, ...ADMIN_PATH_PREFIXES];
+  }
+
+  return [...MEMBER_PATH_PREFIXES];
+}
+
+export function canAccessPath(pathname: string, role: AppRole) {
+  if (isPublicPath(pathname)) return true;
+
+  return getRoleAccessPrefixes(role).some((prefix) =>
+    pathname.startsWith(prefix),
+  );
+}
+
+export function getHomePathForRole(role: AppRole) {
+  return "/dashboard";
+}
+
+export function getSignedInRedirectPath(options: {
+  role: AppRole;
+  isInvitedAccount: boolean;
+  needsOnboarding: boolean;
+}) {
+  const { role, isInvitedAccount, needsOnboarding } = options;
+
+  if (isInvitedAccount) {
+    return "/accept-invite";
+  }
+
+  if (needsOnboarding) {
+    return "/onboarding";
+  }
+
+  return "/dashboard";
+}
