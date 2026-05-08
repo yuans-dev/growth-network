@@ -1,15 +1,92 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type AdvisorMemberListRecord = {
+  id: string;
+  full_name: string | null;
+  business_name: string | null;
+  sector: string | null;
+  role_title: string | null;
+  city: string | null;
+  stage: string;
+  verification_status: string;
+  account_status: string;
+  created_at: string;
+};
+
+export type AdvisorMemberDetailRecord = {
+  id: string;
+  full_name: string | null;
+  business_name: string | null;
+  email: string | null;
+  role_title: string | null;
+  city: string | null;
+  short_bio: string | null;
+  sector: string | null;
+  employee_band: string | null;
+  annual_revenue_estimate: string | null;
+  stage: string;
+  verification_status: string;
+  account_status: string;
+  phone_whatsapp: string | null;
+  years_in_operation: string | null;
+  ask_categories: string[];
+  offer_categories: string[];
+  asks_summary: string | null;
+  offers_summary: string | null;
+  primary_goal: string | null;
+  how_heard_about: string | null;
+  referred_by: string | null;
+  attend_monthly_dinner: string | null;
+  open_to_new_business_conversations: string | null;
+  additional_notes: string | null;
+  pdpa_matching_consent: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type MatchRecord = {
   id: string;
   member_a_id: string;
   member_b_id: string;
   fit_score: number | null;
   summary: string | null;
-  status: "pending" | "accepted" | "declined" | "introduced";
+  status: "pending" | "approved" | "flagged" | "accepted" | "declined" | "introduced";
   member_a_status: "pending" | "accepted" | "declined";
   member_b_status: "pending" | "accepted" | "declined";
   created_at: string;
+};
+
+type MatchQueueMemberProfile = {
+  id: string;
+  full_name: string | null;
+  business_name: string | null;
+  sector: string | null;
+  stage: string;
+  ask_categories: string[];
+  offer_categories: string[];
+  asks_summary: string | null;
+  offers_summary: string | null;
+};
+
+export type AdvisorMatchQueueRecord = {
+  id: string;
+  fit_score: number | null;
+  summary: string | null;
+  status: string;
+  member_a_status: string;
+  member_b_status: string;
+  created_at: string;
+  member_a: MatchQueueMemberProfile | null;
+  member_b: MatchQueueMemberProfile | null;
+};
+
+export type AdvisorIntroQueueRecord = {
+  id: string;
+  fit_score: number | null;
+  summary: string | null;
+  created_at: string;
+  member_a: MatchQueueMemberProfile | null;
+  member_b: MatchQueueMemberProfile | null;
 };
 
 export type AdvisorCompanyRecord = {
@@ -36,7 +113,7 @@ export async function fetchAdvisorDashboardData(supabase: SupabaseClient) {
       .select(
         "id, member_a_id, member_b_id, fit_score, summary, status, member_a_status, member_b_status, created_at",
       )
-      .in("status", ["pending", "accepted", "declined", "introduced"])
+      .in("status", ["pending", "approved", "flagged", "accepted", "declined", "introduced"])
       .order("created_at", { ascending: false })
       .limit(500),
   ]);
@@ -61,7 +138,7 @@ export async function fetchDashboardSummary(
       .from("matches")
       .select("id", { count: "exact", head: true })
       .or(`member_a_id.eq.${userId},member_b_id.eq.${userId}`)
-      .eq("status", "pending"),
+      .eq("status", "approved"),
     supabase
       .from("deal_cards")
       .select("id", { count: "exact", head: true })
@@ -101,6 +178,7 @@ export async function fetchUserMatches(
       "id, member_a_id, member_b_id, fit_score, summary, status, member_a_status, member_b_status, created_at",
     )
     .or(`member_a_id.eq.${userId},member_b_id.eq.${userId}`)
+    .in("status", ["approved", "accepted", "introduced"])
     .order("created_at", { ascending: false });
 
   if (error || !matches) {
@@ -148,7 +226,8 @@ export async function respondToMatch(
   const nextMemberAStatus = isMemberA ? decision : match.member_a_status;
   const nextMemberBStatus = isMemberA ? match.member_b_status : decision;
 
-  let nextStatus: MatchRecord["status"] = "pending";
+  // Default: keep the current status (preserves 'approved' while members are still responding)
+  let nextStatus: MatchRecord["status"] = match.status;
   if (nextMemberAStatus === "declined" || nextMemberBStatus === "declined") {
     nextStatus = "declined";
   } else if (
@@ -345,4 +424,247 @@ export async function deleteAskOffer(supabase: SupabaseClient, id: string) {
     .delete()
     .eq("id", id);
   return { error: error?.message ?? null };
+}
+
+export type AdvisorDocumentQueueRecord = {
+  id: string;
+  member_id: string;
+  document_type: string;
+  status: string;
+  file_path: string;
+  uploaded_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  reject_reason: string | null;
+  member: {
+    id: string;
+    full_name: string | null;
+    business_name: string | null;
+    sector: string | null;
+    stage: string;
+    verification_status: string;
+  } | null;
+};
+
+export async function fetchAdvisorDocumentQueue(supabase: SupabaseClient): Promise<{
+  pending: AdvisorDocumentQueueRecord[];
+  processed: AdvisorDocumentQueueRecord[];
+}> {
+  const { data: docs, error } = await supabase
+    .from("member_documents")
+    .select(
+      "id, member_id, document_type, status, file_path, uploaded_at, reviewed_at, reviewed_by, reject_reason",
+    )
+    .order("uploaded_at", { ascending: true });
+
+  if (error || !docs) return { pending: [], processed: [] };
+
+  const memberIds = Array.from(new Set(docs.map((d) => d.member_id)));
+
+  let profileMap = new Map<
+    string,
+    {
+      id: string;
+      full_name: string | null;
+      business_name: string | null;
+      sector: string | null;
+      stage: string;
+      verification_status: string;
+    }
+  >();
+
+  if (memberIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select(
+        "id, full_name, business_name, sector, stage, verification_status",
+      )
+      .in("id", memberIds);
+
+    profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  }
+
+  const enriched = docs.map((doc) => ({
+    ...doc,
+    member: profileMap.get(doc.member_id) ?? null,
+  })) as AdvisorDocumentQueueRecord[];
+
+  return {
+    pending: enriched.filter(
+      (d) => d.status === "submitted" || d.status === "under-review",
+    ),
+    processed: enriched
+      .filter((d) => d.status === "approved" || d.status === "rejected")
+      .reverse(),
+  };
+}
+
+export async function fetchAdvisorMemberList(
+  supabase: SupabaseClient,
+): Promise<AdvisorMemberListRecord[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "id, full_name, business_name, sector, role_title, city, stage, verification_status, account_status, created_at",
+    )
+    .order("full_name", { ascending: true });
+
+  if (error) return [];
+  return (data ?? []) as AdvisorMemberListRecord[];
+}
+
+export async function fetchAdvisorMemberDetail(
+  supabase: SupabaseClient,
+  memberId: string,
+) {
+  const [
+    { data: profile },
+    { data: signals },
+    { data: matchRows },
+    { data: documents },
+    { data: credits },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(
+        "id, full_name, business_name, email, role_title, city, short_bio, sector, employee_band, annual_revenue_estimate, stage, verification_status, account_status, phone_whatsapp, years_in_operation, ask_categories, offer_categories, asks_summary, offers_summary, primary_goal, how_heard_about, referred_by, attend_monthly_dinner, open_to_new_business_conversations, additional_notes, pdpa_matching_consent, created_at, updated_at",
+      )
+      .eq("id", memberId)
+      .single(),
+    supabase
+      .from("member_asks_offers")
+      .select("id, kind, title, description, status")
+      .eq("member_id", memberId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("matches")
+      .select(
+        "id, member_a_id, member_b_id, fit_score, summary, status, created_at",
+      )
+      .or(`member_a_id.eq.${memberId},member_b_id.eq.${memberId}`)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("member_documents")
+      .select(
+        "id, document_type, status, file_path, uploaded_at, reject_reason",
+      )
+      .eq("member_id", memberId)
+      .order("uploaded_at", { ascending: false }),
+    supabase
+      .from("ad_credit_ledger")
+      .select("change_amount")
+      .eq("member_id", memberId),
+  ]);
+
+  const creditBalance = (credits ?? []).reduce(
+    (sum, row) => sum + Number(row.change_amount ?? 0),
+    0,
+  );
+
+  const counterpartIds = Array.from(
+    new Set(
+      (matchRows ?? []).map((m) =>
+        m.member_a_id === memberId ? m.member_b_id : m.member_a_id,
+      ),
+    ),
+  );
+
+  let counterpartNames = new Map<string, string>();
+  if (counterpartIds.length > 0) {
+    const { data: counterparts } = await supabase
+      .from("profiles")
+      .select("id, full_name, business_name")
+      .in("id", counterpartIds);
+    counterpartNames = new Map(
+      (counterparts ?? []).map((p) => [
+        p.id,
+        p.business_name || p.full_name || "Verified member",
+      ]),
+    );
+  }
+
+  const matches = (matchRows ?? []).map((m) => {
+    const counterpartId =
+      m.member_a_id === memberId ? m.member_b_id : m.member_a_id;
+    return {
+      ...m,
+      counterpart_id: counterpartId,
+      counterpart_name: counterpartNames.get(counterpartId) ?? "Verified member",
+    };
+  });
+
+  return {
+    profile: profile as AdvisorMemberDetailRecord | null,
+    asks: (signals ?? []).filter((s) => s.kind === "ask"),
+    offers: (signals ?? []).filter((s) => s.kind === "offer"),
+    matches,
+    documents: documents ?? [],
+    creditBalance,
+  };
+}
+
+const MATCH_QUEUE_PROFILE_FIELDS =
+  "id, full_name, business_name, sector, stage, ask_categories, offer_categories, asks_summary, offers_summary";
+
+async function buildProfileMap(
+  supabase: SupabaseClient,
+  memberIds: string[],
+): Promise<Map<string, MatchQueueMemberProfile>> {
+  if (memberIds.length === 0) return new Map();
+  const { data } = await supabase
+    .from("profiles")
+    .select(MATCH_QUEUE_PROFILE_FIELDS)
+    .in("id", memberIds);
+  return new Map((data ?? []).map((p) => [p.id, p as MatchQueueMemberProfile]));
+}
+
+export async function fetchAdvisorMatchQueue(
+  supabase: SupabaseClient,
+): Promise<AdvisorMatchQueueRecord[]> {
+  const { data: matches, error } = await supabase
+    .from("matches")
+    .select(
+      "id, member_a_id, member_b_id, fit_score, summary, status, member_a_status, member_b_status, created_at",
+    )
+    .in("status", ["pending", "flagged"])
+    .order("created_at", { ascending: false });
+
+  if (error || !matches || matches.length === 0) return [];
+
+  const memberIds = Array.from(
+    new Set(matches.flatMap((m) => [m.member_a_id, m.member_b_id])),
+  );
+  const profileMap = await buildProfileMap(supabase, memberIds);
+
+  return matches.map((m) => ({
+    ...m,
+    member_a: profileMap.get(m.member_a_id) ?? null,
+    member_b: profileMap.get(m.member_b_id) ?? null,
+  }));
+}
+
+export async function fetchAdvisorIntroductionQueue(
+  supabase: SupabaseClient,
+): Promise<AdvisorIntroQueueRecord[]> {
+  const { data: matches, error } = await supabase
+    .from("matches")
+    .select(
+      "id, member_a_id, member_b_id, fit_score, summary, created_at",
+    )
+    .eq("status", "accepted")
+    .order("created_at", { ascending: true });
+
+  if (error || !matches || matches.length === 0) return [];
+
+  const memberIds = Array.from(
+    new Set(matches.flatMap((m) => [m.member_a_id, m.member_b_id])),
+  );
+  const profileMap = await buildProfileMap(supabase, memberIds);
+
+  return matches.map((m) => ({
+    ...m,
+    member_a: profileMap.get(m.member_a_id) ?? null,
+    member_b: profileMap.get(m.member_b_id) ?? null,
+  }));
 }

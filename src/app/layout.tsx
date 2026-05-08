@@ -27,7 +27,7 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased scroll-smooth`}
       suppressHydrationWarning
     >
-      <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink)] font-sans">
+      <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink)] font-sans" suppressHydrationWarning>
         <Providers>
           <TopHeader />
           <AuthGate>

@@ -175,15 +175,35 @@ export default function DashboardPage() {
             />
           </section>
 
-          <section className="grid gap-4 md:grid-cols-2">
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <QuickLink
+              href="/advisor/match-queue"
+              title="Match review queue"
+              subtitle="Approve or decline AI-generated matches before members see them"
+            />
+            <QuickLink
+              href="/advisor/introductions"
+              title="Introductions"
+              subtitle="Write warm intros for matches both members have accepted"
+            />
+            <QuickLink
+              href="/advisor/members"
+              title="Member management"
+              subtitle="View all members, move stages, and manage account status"
+            />
+            <QuickLink
+              href="/advisor/documents"
+              title="Document review"
+              subtitle="Approve or reject Stage 2 KYC submissions"
+            />
             <QuickLink
               href="/advisor/manual-match"
-              title="Advisor tools"
-              subtitle="Create manual matches and manage introductions"
+              title="Manual match"
+              subtitle="Create a match between two members directly"
             />
             <QuickLink
               href="/advisor/network-graph"
-              title="Particle network graph"
+              title="Network graph"
               subtitle="Visualize pending and accepted relationships"
             />
           </section>

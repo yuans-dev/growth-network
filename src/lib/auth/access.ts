@@ -26,6 +26,10 @@ export const MEMBER_PATH_PREFIXES = [
 export const ADVISOR_PATH_PREFIXES = [
   "/advisor/manual-match",
   "/advisor/network-graph",
+  "/advisor/members",
+  "/advisor/documents",
+  "/advisor/match-queue",
+  "/advisor/introductions",
 ] as const;
 export const ADMIN_PATH_PREFIXES = ["/admin"] as const;
 
