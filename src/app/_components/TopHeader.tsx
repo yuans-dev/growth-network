@@ -59,12 +59,6 @@ export default function TopHeader() {
                 >
                   Profile
                 </Link>
-                <Link
-                  href="/payments"
-                  className={pathname.startsWith("/payments") ? "gn-nav-link gn-nav-link-active" : "gn-nav-link"}
-                >
-                  Payments
-                </Link>
               </nav>
             )}
 

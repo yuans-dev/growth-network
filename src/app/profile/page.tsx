@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "../providers";
@@ -10,18 +10,43 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
 
+  const loadProfile = useCallback(async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    setProfile(data);
+  }, [supabase, user?.id]);
+
   useEffect(() => {
-    const load = async () => {
-      if (!user?.id) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      setProfile(data);
+    void loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`profile-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${user.id}`,
+        },
+        () => {
+          void loadProfile();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
     };
-    void load();
-  }, [user?.id, supabase]);
+  }, [loadProfile, supabase, user?.id]);
 
   return (
     <div className="min-h-screen bg-(--color-canvas)">
@@ -53,6 +78,9 @@ export default function ProfilePage() {
           <h2 className="text-lg font-semibold text-(--color-ink)">
             Business summary
           </h2>
+          <p className="mt-2 text-sm text-(--color-body)">
+            {profile?.business_name || "Business name pending"}
+          </p>
           <p className="mt-2 text-sm text-(--color-body)">
             {profile?.short_bio || "No bio yet"}
           </p>
@@ -139,12 +167,18 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        <section>
+        <section className="flex items-center justify-between gap-4">
           <Link
             href="/onboarding"
             className="text-sm text-(--color-primary) hover:underline"
           >
             Update your matching profile →
+          </Link>
+          <Link
+            href="/payments"
+            className="inline-flex items-center rounded-[10px] bg-(--color-primary) px-4 py-2 text-sm font-semibold text-white hover:bg-(--color-primary-active)"
+          >
+            Purchase credits
           </Link>
         </section>
       </div>
