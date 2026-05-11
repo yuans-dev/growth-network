@@ -334,10 +334,11 @@ export default function OnboardingForm() {
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="full_name" className="block text-sm font-600 text-[var(--color-ink)]">
                 Full name
               </label>
               <input
+                id="full_name"
                 className="gn-input mt-1"
                 value={form.full_name}
                 onChange={(e) => handleChange("full_name", e.target.value)}
@@ -345,10 +346,11 @@ export default function OnboardingForm() {
               />
             </div>
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="business_name" className="block text-sm font-600 text-[var(--color-ink)]">
                 Business name
               </label>
               <input
+                id="business_name"
                 className="gn-input mt-1"
                 value={form.business_name}
                 onChange={(e) => handleChange("business_name", e.target.value)}
@@ -358,10 +360,11 @@ export default function OnboardingForm() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="how_heard_about" className="block text-sm font-600 text-[var(--color-ink)]">
                 How did you hear about The Growth Network?
               </label>
               <select
+                id="how_heard_about"
                 className="gn-input mt-1"
                 value={form.how_heard_about}
                 onChange={(e) =>
@@ -377,10 +380,11 @@ export default function OnboardingForm() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="referred_by" className="block text-sm font-600 text-[var(--color-ink)]">
                 If referred, who referred you?
               </label>
               <input
+                id="referred_by"
                 className="gn-input mt-1"
                 value={form.referred_by}
                 onChange={(e) => handleChange("referred_by", e.target.value)}
@@ -391,10 +395,11 @@ export default function OnboardingForm() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="phone_whatsapp" className="block text-sm font-600 text-[var(--color-ink)]">
                 Phone Number / WhatsApp
               </label>
               <input
+                id="phone_whatsapp"
                 className="gn-input mt-1"
                 value={form.phone_whatsapp}
                 onChange={(e) => handleChange("phone_whatsapp", e.target.value)}
@@ -402,10 +407,11 @@ export default function OnboardingForm() {
               />
             </div>
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="years_in_operation" className="block text-sm font-600 text-[var(--color-ink)]">
                 Years in Operation
               </label>
               <select
+                id="years_in_operation"
                 className="gn-input mt-1"
                 value={form.years_in_operation}
                 onChange={(e) =>
@@ -424,30 +430,33 @@ export default function OnboardingForm() {
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="role_title" className="block text-sm font-600 text-[var(--color-ink)]">
                 Role / title
               </label>
               <input
+                id="role_title"
                 className="gn-input mt-1"
                 value={form.role_title}
                 onChange={(e) => handleChange("role_title", e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="city" className="block text-sm font-600 text-[var(--color-ink)]">
                 City
               </label>
               <input
+                id="city"
                 className="gn-input mt-1"
                 value={form.city}
                 onChange={(e) => handleChange("city", e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="sector" className="block text-sm font-600 text-[var(--color-ink)]">
                 Sector
               </label>
               <select
+                id="sector"
                 className="gn-input mt-1"
                 value={form.sector}
                 onChange={(e) => handleChange("sector", e.target.value)}
@@ -463,10 +472,11 @@ export default function OnboardingForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-600 text-[var(--color-ink)]">
+            <label htmlFor="short_bio" className="block text-sm font-600 text-[var(--color-ink)]">
               Short bio (1–2 sentences)
             </label>
             <textarea
+              id="short_bio"
               className="gn-input mt-1 h-24"
               value={form.short_bio}
               onChange={(e) => handleChange("short_bio", e.target.value)}
@@ -475,10 +485,11 @@ export default function OnboardingForm() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="employee_band" className="block text-sm font-600 text-[var(--color-ink)]">
                 Employee band
               </label>
               <select
+                id="employee_band"
                 className="gn-input mt-1"
                 value={form.employee_band}
                 onChange={(e) => handleChange("employee_band", e.target.value)}
@@ -492,10 +503,11 @@ export default function OnboardingForm() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="annual_revenue_estimate" className="block text-sm font-600 text-[var(--color-ink)]">
                 Annual revenue (estimate)
               </label>
               <input
+                id="annual_revenue_estimate"
                 className="gn-input mt-1"
                 value={form.annual_revenue_estimate}
                 onChange={(e) =>
@@ -558,13 +570,14 @@ export default function OnboardingForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-600 text-[var(--color-ink)]">
+            <label htmlFor="asks_summary" className="block text-sm font-600 text-[var(--color-ink)]">
               ASKS summary
             </label>
             <p className="text-xs text-[var(--color-muted)]">
               Describe in 1-2 sentences what you are currently looking for.
             </p>
             <textarea
+              id="asks_summary"
               className="gn-input mt-2 h-28"
               value={form.asks_summary}
               onChange={(e) => handleChange("asks_summary", e.target.value)}
@@ -573,13 +586,14 @@ export default function OnboardingForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-600 text-[var(--color-ink)]">
+            <label htmlFor="offers_summary" className="block text-sm font-600 text-[var(--color-ink)]">
               OFFERS summary
             </label>
             <p className="text-xs text-[var(--color-muted)]">
               Describe in 1-2 sentences what you bring to the table.
             </p>
             <textarea
+              id="offers_summary"
               className="gn-input mt-2 h-28"
               value={form.offers_summary}
               onChange={(e) => handleChange("offers_summary", e.target.value)}
@@ -613,10 +627,11 @@ export default function OnboardingForm() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-600 text-[var(--color-ink)]">
+              <label htmlFor="primary_goal" className="block text-sm font-600 text-[var(--color-ink)]">
                 What is your primary goal for joining?
               </label>
               <select
+                id="primary_goal"
                 className="gn-input mt-1"
                 value={form.primary_goal}
                 onChange={(e) => handleChange("primary_goal", e.target.value)}
@@ -676,10 +691,11 @@ export default function OnboardingForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-600 text-[var(--color-ink)]">
+            <label htmlFor="additional_notes" className="block text-sm font-600 text-[var(--color-ink)]">
               Anything else you&apos;d like us to know?
             </label>
             <textarea
+              id="additional_notes"
               className="gn-input mt-1 h-28"
               value={form.additional_notes}
               onChange={(e) => handleChange("additional_notes", e.target.value)}

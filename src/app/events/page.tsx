@@ -75,7 +75,7 @@ export default function EventsPage() {
             href="/dashboard"
             className="text-sm text-(--color-primary) hover:underline"
           >
-            Back to dashboard
+            ← Back to dashboard
           </Link>
           <h1 className="mt-3 text-3xl font-semibold text-(--color-ink)">
             Events

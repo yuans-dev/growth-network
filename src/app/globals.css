@@ -9,9 +9,9 @@
   --color-surface-card: #ffffff;
 
   /* Primary Brand */
-  --color-primary: #2b0a27;
-  --color-primary-active: #1f071c;
-  --color-primary-disabled: #6a4a63;
+  --color-primary: #460479;
+  --color-primary-active: #36035d;
+  --color-primary-disabled: #8c6aa8;
 
   /* Text Colors */
   --color-ink: #222222;
@@ -30,7 +30,7 @@
   --color-luxe: #460479;
   --color-plus: #92174d;
   --color-star-rating: #222222;
-  --color-legal-link: #428bff;
+  --color-legal-link: #460479;
   --color-error-text: #c13515;
 
   /* Legacy aliases for compatibility */
@@ -163,7 +163,7 @@ body {
 .gn-input:focus {
   border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 56, 92, 0.1);
+  box-shadow: 0 0 0 3px rgba(70, 4, 121, 0.1);
 }
 
 /* Primary Button */
@@ -218,7 +218,30 @@ body {
 
 .gn-btn-secondary:hover {
   background: var(--color-surface-soft);
-  border-color: var(--color-body);
+  border-color: var(--color-primary);
+}
+
+.gn-nav-link {
+  color: var(--color-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.85rem 1rem;
+  border-radius: 9999px;
+  transition: background 150ms ease, color 150ms ease, transform 100ms ease;
+}
+
+.gn-nav-link:hover,
+.gn-nav-link:focus-visible {
+  background: rgba(70, 4, 121, 0.08);
+  color: var(--color-primary);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.gn-nav-link-active {
+  background: rgba(70, 4, 121, 0.12);
+  color: var(--color-primary);
+  box-shadow: inset 0 -2px 0 0 var(--color-primary);
 }
 
 /* Search Bar */

@@ -66,7 +66,7 @@ export default function DealBoardPage() {
             href="/dashboard"
             className="text-sm text-(--color-primary) hover:underline"
           >
-            Back to dashboard
+            ← Back to dashboard
           </Link>
           <h1 className="mt-3 text-3xl font-semibold text-(--color-ink)">
             Deal board
@@ -74,22 +74,29 @@ export default function DealBoardPage() {
         </div>
       </section>
 
-      <div className="overflow-x-auto px-[5%] py-10">
-        <div className="flex min-w-fit gap-5">
-          {grouped.map((column) => (
-            <div
-              key={column.stage}
-              className="w-80 shrink-0 rounded-[16px] border border-(--color-hairline) bg-(--color-canvas)"
-            >
-              <div className="border-b border-(--color-hairline) bg-(--color-surface-soft) p-4">
-                <h2 className="text-sm font-semibold text-(--color-ink)">
-                  {column.stage}
-                </h2>
-                <p className="mt-1 text-xs text-(--color-muted)">
-                  {column.cards.length} cards
-                </p>
+      <div className="mx-auto max-w-7xl space-y-5 px-[5%] py-10">
+        {grouped.map((column) => (
+          <section
+            key={column.stage}
+            className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas)"
+          >
+            <div className="border-b border-(--color-hairline) bg-(--color-surface-soft) px-4 py-3">
+              <h2 className="text-base font-semibold text-(--color-ink)">
+                {column.stage}
+              </h2>
+              <p className="mt-1 text-xs text-(--color-muted)">
+                {column.cards.length} cards
+              </p>
+            </div>
+
+            {column.cards.length === 0 ? (
+              <div className="p-4">
+                <div className="rounded-[12px] border border-dashed border-(--color-hairline) p-4 text-center text-xs text-(--color-muted)">
+                  No cards
+                </div>
               </div>
-              <div className="space-y-3 p-3">
+            ) : (
+              <div className="divide-y divide-(--color-hairline)">
                 {column.cards.map((card) => {
                   const ageDays = Math.floor(
                     (Date.now() - new Date(card.last_updated_at).getTime()) /
@@ -102,64 +109,61 @@ export default function DealBoardPage() {
                   return (
                     <article
                       key={card.id}
-                      className={`rounded-[12px] border p-3 ${
-                        isStale
-                          ? "border-orange-300 bg-orange-50"
-                          : "border-(--color-hairline) bg-(--color-canvas)"
-                      }`}
+                      className={`p-4 ${isStale ? "bg-orange-50/60" : ""}`}
                     >
-                      <h3 className="text-sm font-semibold text-(--color-ink)">
-                        {card.title}
-                      </h3>
-                      <p className="mt-1 text-xs text-(--color-body)">
-                        Fit {card.fit_score ?? "-"} · {card.confidence}{" "}
-                        confidence
-                      </p>
-                      {card.impact_projection && (
-                        <p className="mt-1 text-xs text-(--color-body)">
-                          {card.impact_projection}
-                        </p>
-                      )}
-                      <p className="mt-2 text-xs text-(--color-muted)">
-                        {ageDays} days since update
-                      </p>
-                      {isStale && (
-                        <p className="mt-1 text-xs font-semibold text-orange-700">
-                          {isNegotiationEscalation
-                            ? "Escalation: 14+ days in Negotiation / Legal"
-                            : "Stale: 7+ days without update"}
-                        </p>
-                      )}
-                      {card.next_action && (
-                        <p className="mt-2 text-xs text-(--color-body)">
-                          Next: {card.next_action}
-                        </p>
-                      )}
-                      {card.close_reason_code && (
-                        <p className="mt-1 text-xs text-(--color-body)">
-                          Reason: {card.close_reason_code}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleTouch(card.id)}
-                        className="mt-3 w-full rounded-[8px] bg-(--color-primary) px-3 py-1.5 text-xs font-medium text-white hover:bg-(--color-primary-active)"
-                      >
-                        Mark updated
-                      </button>
+                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-semibold text-(--color-ink)">
+                            {card.title}
+                          </h3>
+                          <p className="mt-1 text-xs text-(--color-body)">
+                            Fit {card.fit_score ?? "-"} · {card.confidence}{" "}
+                            confidence
+                          </p>
+                          {card.impact_projection && (
+                            <p className="mt-1 text-xs text-(--color-body)">
+                              {card.impact_projection}
+                            </p>
+                          )}
+                          {card.next_action && (
+                            <p className="mt-2 text-xs text-(--color-body)">
+                              Next: {card.next_action}
+                            </p>
+                          )}
+                          {card.close_reason_code && (
+                            <p className="mt-1 text-xs text-(--color-body)">
+                              Reason: {card.close_reason_code}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="w-full shrink-0 md:w-56">
+                          <p className="text-xs text-(--color-muted)">
+                            {ageDays} days since update
+                          </p>
+                          {isStale && (
+                            <p className="mt-1 text-xs font-semibold text-orange-700">
+                              {isNegotiationEscalation
+                                ? "Escalation: 14+ days in Negotiation / Legal"
+                                : "Stale: 7+ days without update"}
+                            </p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleTouch(card.id)}
+                            className="mt-3 w-full rounded-[8px] bg-(--color-primary) px-3 py-1.5 text-xs font-medium text-white hover:bg-(--color-primary-active)"
+                          >
+                            Mark updated
+                          </button>
+                        </div>
+                      </div>
                     </article>
                   );
                 })}
-
-                {column.cards.length === 0 && (
-                  <div className="rounded-[12px] border border-dashed border-(--color-hairline) p-4 text-center text-xs text-(--color-muted)">
-                    No cards
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </section>
+        ))}
       </div>
     </div>
   );

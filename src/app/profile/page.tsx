@@ -31,15 +31,20 @@ export default function ProfilePage() {
             href="/dashboard"
             className="text-sm text-(--color-primary) hover:underline"
           >
-            Back to dashboard
+            ← Back to dashboard
           </Link>
           <h1 className="mt-3 text-3xl font-semibold text-(--color-ink)">
             Profile
           </h1>
           <p className="mt-2 text-sm text-(--color-body)">
-            {profile?.business_name || "Member profile"} · Stage{" "}
+            {profile?.full_name || "Member profile"} · Stage{" "}
             {profile?.stage || "0"}
           </p>
+          {profile?.business_name && (
+            <p className="mt-1 text-sm text-(--color-muted)">
+              {profile.business_name}
+            </p>
+          )}
         </div>
       </section>
 

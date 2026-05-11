@@ -281,47 +281,55 @@ export default function DashboardPage() {
           />
         </section>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          {role && ["advisor", "admin"].includes(role) ? (
-            <QuickLink
-              href="/advisor/manual-match"
-              title="Advisor tools"
-              subtitle="Curate manual matches and manage advisor workflows"
-            />
-          ) : (
-            <>
+        <section className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-(--color-muted)">
+              Quick actions
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-(--color-ink)">
+              Access key dashboard features
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-(--color-body)">
+              These cards surface the most important member tools and workflows for your current stage.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {role && ["advisor", "admin"].includes(role) ? (
               <QuickLink
-                href="/matches"
-                title="Matches"
-                subtitle="Review and respond to current cycle proposals"
+                href="/advisor/manual-match"
+                title="Advisor tools"
+                subtitle="Curate manual matches and manage advisor workflows"
               />
-              <QuickLink
-                href="/deal-board"
-                title="Deal board"
-                subtitle="Keep cards updated within SLA windows"
-              />
-              <QuickLink
-                href="/profile"
-                title="Profile"
-                subtitle="Maintain your matching profile and business details"
-              />
-              <QuickLink
-                href="/documents"
-                title="Documents"
-                subtitle="Submit and track KYC verification files"
-              />
-              <QuickLink
-                href="/events"
-                title="Events"
-                subtitle="Register and mark attendance for sessions"
-              />
-              <QuickLink
-                href="/payments"
-                title="Payments"
-                subtitle="Review billing and credit activity"
-              />
-            </>
-          )}
+            ) : (
+              <>
+                <InfoCard
+                  title="Matches"
+                  subtitle="Review and respond to current cycle proposals"
+                />
+                <InfoCard
+                  title="Deal board"
+                  subtitle="Keep cards updated within SLA windows"
+                />
+                <InfoCard
+                  title="Profile"
+                  subtitle="Maintain your matching profile and business details"
+                />
+                <InfoCard
+                  title="Documents"
+                  subtitle="Submit and track KYC verification files"
+                />
+                <InfoCard
+                  title="Events"
+                  subtitle="Register and mark attendance for sessions"
+                />
+                <InfoCard
+                  title="Payments"
+                  subtitle="Review billing and credit activity"
+                />
+              </>
+            )}
+          </div>
         </section>
       </div>
     </div>
@@ -419,6 +427,21 @@ function QuickLink({
       <h2 className="text-base font-semibold text-(--color-ink)">{title}</h2>
       <p className="mt-2 text-sm text-(--color-body)">{subtitle}</p>
     </Link>
+  );
+}
+
+function InfoCard({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas) p-5 opacity-80">
+      <h2 className="text-base font-semibold text-(--color-ink)">{title}</h2>
+      <p className="mt-2 text-sm text-(--color-body)">{subtitle}</p>
+    </div>
   );
 }
 
