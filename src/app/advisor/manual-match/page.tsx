@@ -5,6 +5,20 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "../../providers";
 
+async function readResponsePayload(response: Response) {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text) as { error?: string; success?: boolean };
+  } catch {
+    return null;
+  }
+}
+
 export default function ManualMatchPage() {
   const supabase = useMemo(() => createClient(), []);
   const { role } = useAuth();
@@ -68,10 +82,10 @@ export default function ManualMatchPage() {
         }),
       });
 
-      const payload = await res.json();
+      const payload = await readResponsePayload(res);
       setBusy(false);
       if (!res.ok) {
-        setMessage(payload.error || "Failed to create match.");
+        setMessage(payload?.error || "Failed to create match.");
         return;
       }
     } catch (e: any) {
