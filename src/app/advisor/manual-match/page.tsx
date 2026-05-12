@@ -63,8 +63,8 @@ export default function ManualMatchPage() {
         body: JSON.stringify({
           member_a_id: a,
           member_b_id: b,
-          summary,
-          fit_score: fitScore ? Number(fitScore) : null,
+          summary: summary.trim() || "",
+          fit_score: fitScore ? Number(fitScore) : 0,
         }),
       });
 
