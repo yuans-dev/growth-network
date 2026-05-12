@@ -56,21 +56,27 @@ export default function ManualMatchPage() {
     setBusy(true);
     setMessage("");
 
-    const res = await fetch("/api/matching/manual", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        member_a_id: a,
-        member_b_id: b,
-        summary,
-        fit_score: fitScore ? Number(fitScore) : null,
-      }),
-    });
+    try {
+      const res = await fetch("/api/matching/manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          member_a_id: a,
+          member_b_id: b,
+          summary,
+          fit_score: fitScore ? Number(fitScore) : null,
+        }),
+      });
 
-    const payload = await res.json();
-    setBusy(false);
-    if (!res.ok) {
-      setMessage(payload.error || "Failed to create match.");
+      const payload = await res.json();
+      setBusy(false);
+      if (!res.ok) {
+        setMessage(payload.error || "Failed to create match.");
+        return;
+      }
+    } catch (e) {
+      setBusy(false);
+      setMessage("An error occurred while creating the match.");
       return;
     }
 
