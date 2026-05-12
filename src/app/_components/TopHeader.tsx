@@ -9,7 +9,8 @@ export default function TopHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const { signedIn, signOut, isInvitedAccount, role } = useAuth();
-  const isMemberView = signedIn && role && !["advisor", "staff", "admin"].includes(role);
+  const isMemberView =
+    signedIn && role && !["advisor", "staff", "admin"].includes(role);
 
   return (
     <header className="sticky top-0 z-40 border-b border-(--color-hairline) bg-(--color-nav-bg) backdrop-blur-sm">
@@ -31,31 +32,51 @@ export default function TopHeader() {
               <nav className="flex flex-wrap items-center gap-2">
                 <Link
                   href="/matches"
-                  className={pathname.startsWith("/matches") ? "gn-nav-link gn-nav-link-active" : "gn-nav-link"}
+                  className={
+                    pathname.startsWith("/matches")
+                      ? "gn-nav-link gn-nav-link-active"
+                      : "gn-nav-link"
+                  }
                 >
                   Matches
                 </Link>
                 <Link
                   href="/deal-board"
-                  className={pathname.startsWith("/deal-board") ? "gn-nav-link gn-nav-link-active" : "gn-nav-link"}
+                  className={
+                    pathname.startsWith("/deal-board")
+                      ? "gn-nav-link gn-nav-link-active"
+                      : "gn-nav-link"
+                  }
                 >
                   Deal board
                 </Link>
                 <Link
                   href="/documents"
-                  className={pathname.startsWith("/documents") ? "gn-nav-link gn-nav-link-active" : "gn-nav-link"}
+                  className={
+                    pathname.startsWith("/documents")
+                      ? "gn-nav-link gn-nav-link-active"
+                      : "gn-nav-link"
+                  }
                 >
                   Documents
                 </Link>
                 <Link
                   href="/events"
-                  className={pathname.startsWith("/events") ? "gn-nav-link gn-nav-link-active" : "gn-nav-link"}
+                  className={
+                    pathname.startsWith("/events")
+                      ? "gn-nav-link gn-nav-link-active"
+                      : "gn-nav-link"
+                  }
                 >
                   Events
                 </Link>
                 <Link
                   href="/profile"
-                  className={pathname.startsWith("/profile") ? "gn-nav-link gn-nav-link-active" : "gn-nav-link"}
+                  className={
+                    pathname.startsWith("/profile")
+                      ? "gn-nav-link gn-nav-link-active"
+                      : "gn-nav-link"
+                  }
                 >
                   Profile
                 </Link>
@@ -65,17 +86,14 @@ export default function TopHeader() {
             <div className="flex items-center gap-4">
               {signedIn ? (
                 <>
-                  {/** Advisor tools quick link for elevated roles */}
-                  {isInvitedAccount === false &&
-                    role &&
-                    ["advisor", "staff", "admin"].includes(role) && (
-                      <Link
-                        href="/advisor/manual-match"
-                        className="text-sm text-(--color-primary) hover:underline"
-                      >
-                        Advisor tools
-                      </Link>
-                    )}
+                  {signedIn && pathname !== getHomePathForRole(role) && (
+                    <Link
+                      href={getHomePathForRole(role)}
+                      className="text-sm text-(--color-muted) hover:underline"
+                    >
+                      Back to dashboard
+                    </Link>
+                  )}
 
                   <button
                     type="button"
