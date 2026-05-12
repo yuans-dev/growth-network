@@ -74,9 +74,9 @@ export default function ManualMatchPage() {
         setMessage(payload.error || "Failed to create match.");
         return;
       }
-    } catch (e) {
+    } catch (e: any) {
       setBusy(false);
-      setMessage("An error occurred while creating the match.");
+      setMessage(e.message || "Failed to create match.");
       return;
     }
 
