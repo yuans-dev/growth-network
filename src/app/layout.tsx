@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import TopHeader from "./_components/TopHeader";
+import AppShell from "./_components/AppShell";
 import AuthGate from "./_components/AuthGate";
 
 const inter = Inter({
@@ -14,6 +14,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "The Growth Network - Marketplace",
   description: "Discover verified homes, experiences, and services.",
+  icons: {
+    icon: "/logo.ico",
+  },
 };
 
 export default function RootLayout({
@@ -29,10 +32,11 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-[var(--color-canvas)] text-[var(--color-ink)] font-sans" suppressHydrationWarning>
         <Providers>
-          <TopHeader />
-          <AuthGate>
-            <main>{children}</main>
-          </AuthGate>
+          <AppShell>
+            <AuthGate>
+              <main>{children}</main>
+            </AuthGate>
+          </AppShell>
         </Providers>
       </body>
     </html>

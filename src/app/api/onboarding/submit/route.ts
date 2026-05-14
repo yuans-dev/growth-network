@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
 type OnboardingPayload = {
   full_name: string;
@@ -39,6 +40,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+    const role = getRoleFromAccessToken(session?.access_token);
+    const isAdminView = ["advisor", "admin"].includes(role ?? "");
+
     const body = (await request.json()) as OnboardingPayload;
 
     if (!body || !body.full_name || !body.sector) {
@@ -69,28 +74,28 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!body.ask_categories || body.ask_categories.length === 0) {
+    if (!isAdminView && (!body.ask_categories || body.ask_categories.length === 0)) {
       return NextResponse.json(
         { error: "Select at least one ASK category" },
         { status: 400 },
       );
     }
 
-    if (!body.offer_categories || body.offer_categories.length === 0) {
+    if (!isAdminView && (!body.offer_categories || body.offer_categories.length === 0)) {
       return NextResponse.json(
         { error: "Select at least one OFFER category" },
         { status: 400 },
       );
     }
 
-    if (!body.asks_summary?.trim()) {
+    if (!isAdminView && !body.asks_summary?.trim()) {
       return NextResponse.json(
         { error: "ASKS summary is required" },
         { status: 400 },
       );
     }
 
-    if (!body.offers_summary?.trim()) {
+    if (!isAdminView && !body.offers_summary?.trim()) {
       return NextResponse.json(
         { error: "OFFERS summary is required" },
         { status: 400 },
@@ -188,6 +193,10 @@ export async function POST(request: Request) {
     if (upsertError) {
       return NextResponse.json({ error: upsertError.message }, { status: 500 });
     }
+
+    await supabase.auth.updateUser({
+      data: { full_name: body.full_name.trim() },
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {

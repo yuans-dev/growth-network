@@ -1,35 +1,162 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../providers";
 import { createClient } from "@/lib/supabase/client";
 import {
-  fetchAdvisorDashboardData,
   fetchDashboardSummary,
   type AdvisorCompanyRecord,
   type AdvisorMatchRecord,
+  type DashboardMatch,
+  type DashboardProfile,
 } from "@/lib/app-data";
+import {
+  ProfileStrength,
+  MatchFactorsChart,
+  ActivityFeed,
+  BenchmarkingChart,
+} from "./_components/MemberWidgets";
+import {
+  SystemPulseHeader,
+  AdvisorMetricCard,
+  UrgencyQueuePanel,
+  MatchingFunnelPanel,
+  SectorPieChart,
+  type CompanyWithMatches,
+} from "./_components/AdvisorWidgets";
+
+// ─── Profile strength helpers ─────────────────────────────────────────────────
+
+const PROFILE_FIELDS: { key: keyof DashboardProfile; label: string }[] = [
+  { key: "full_name",        label: "Add your full name"          },
+  { key: "business_name",    label: "Add your business name"      },
+  { key: "role_title",       label: "Add your role title"         },
+  { key: "sector",           label: "Add your industry sector"    },
+  { key: "city",             label: "Add your city"               },
+  { key: "short_bio",        label: "Write a short bio"           },
+  { key: "phone_whatsapp",   label: "Add a WhatsApp number"       },
+  { key: "ask_categories",   label: "Add what you're looking for" },
+  { key: "offer_categories", label: "Add what you can offer"      },
+  { key: "asks_summary",     label: "Describe your asks"          },
+  { key: "offers_summary",   label: "Describe your offers"        },
+];
+
+function computeProfileStrength(profile: DashboardProfile | null) {
+  if (!profile) return { percent: 0, nextStep: "Complete your profile to get started" };
+  let filled = 0;
+  let nextStep: string | undefined;
+  for (const { key, label } of PROFILE_FIELDS) {
+    const val = profile[key];
+    const isDefined = Array.isArray(val) ? val.length > 0 : val !== null && val !== "";
+    if (isDefined) {
+      filled++;
+    } else if (!nextStep) {
+      nextStep = label;
+    }
+  }
+  return {
+    percent: Math.round((filled / PROFILE_FIELDS.length) * 100),
+    nextStep,
+  };
+}
+
+// ─── Match radar helpers ──────────────────────────────────────────────────────
+
+function computeRadarData(recentMatches: DashboardMatch[], userId: string) {
+  if (recentMatches.length === 0) {
+    return [
+      { subject: "Match Quality", value: 0, fullMark: 100 },
+      { subject: "Response Rate", value: 0, fullMark: 100 },
+      { subject: "Accept Rate",   value: 0, fullMark: 100 },
+    ];
+  }
+
+  const scores = recentMatches.filter((m) => m.fit_score !== null).map((m) => m.fit_score!);
+  const avgFit = scores.length > 0
+    ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    : 0;
+
+  const responded = recentMatches.filter((m) => {
+    const myStatus = m.member_a_id === userId ? m.member_a_status : m.member_b_status;
+    return myStatus !== "pending";
+  }).length;
+  const responseRate = Math.round((responded / recentMatches.length) * 100);
+
+  const accepted = recentMatches.filter((m) => {
+    const myStatus = m.member_a_id === userId ? m.member_a_status : m.member_b_status;
+    return myStatus === "accepted";
+  }).length;
+  const acceptRate = responded > 0 ? Math.round((accepted / responded) * 100) : 0;
+
+  return [
+    { subject: "Match Quality", value: avgFit,       fullMark: 100 },
+    { subject: "Response Rate", value: responseRate, fullMark: 100 },
+    { subject: "Accept Rate",   value: acceptRate,   fullMark: 100 },
+  ];
+}
+
+// ─── Activity feed helpers ────────────────────────────────────────────────────
+
+function formatRelativeTime(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 1) return "Just now";
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  return new Date(isoDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function matchesToActivityEvents(recentMatches: DashboardMatch[], userId: string) {
+  return recentMatches.slice(0, 4).map((m) => {
+    const counterpart = m.counterpart_name ?? "a verified member";
+    let type: "match" | "deal" | "intro" | "general" = "match";
+    let label = `New match suggested`;
+    let subtext = `${counterpart} — awaiting your response`;
+
+    if (m.status === "introduced") {
+      type = "intro";
+      label = "Introduction made";
+      subtext = `You ↔ ${counterpart}`;
+    } else if (m.status === "accepted") {
+      type = "deal";
+      label = "Match accepted";
+      subtext = `You ↔ ${counterpart}`;
+    } else {
+      const myStatus = m.member_a_id === userId ? m.member_a_status : m.member_b_status;
+      if (myStatus === "declined") {
+        type = "general";
+        label = "Match declined";
+        subtext = counterpart;
+      }
+    }
+
+    return { id: m.id, type, label, subtext, time: formatRelativeTime(m.created_at) };
+  });
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const supabase = useMemo(() => createClient(), []);
   const { user, role } = useAuth();
+  const displayName = user?.user_metadata?.full_name ?? user?.email ?? "";
   const isAdvisorView = role && ["advisor", "admin"].includes(role);
   const [isLoading, setIsLoading] = useState(true);
   const [summary, setSummary] = useState({
     pendingMatches: 0,
     activeDeals: 0,
     adCredits: 0,
-    profile: null as null | {
-      full_name: string | null;
-      stage: string | null;
-      verification_status: string | null;
-    },
+    profile: null as null | DashboardProfile,
+    recentMatches: [] as DashboardMatch[],
+    sectorAvgDeals: 0,
   });
   const [advisorData, setAdvisorData] = useState<{
     companies: AdvisorCompanyRecord[];
     matches: AdvisorMatchRecord[];
-  }>({ companies: [], matches: [] });
+    sparkData: { value: number }[];
+  }>({ companies: [], matches: [], sparkData: [] });
 
   useEffect(() => {
     let active = true;
@@ -38,9 +165,12 @@ export default function DashboardPage() {
       if (!user?.id) return;
       setIsLoading(true);
       if (isAdvisorView) {
-        const next = await fetchAdvisorDashboardData(supabase);
+        const res = await fetch("/api/advisor/dashboard");
         if (!active) return;
-        setAdvisorData(next);
+        if (res.ok) {
+          const next = await res.json();
+          setAdvisorData(next);
+        }
       } else {
         const next = await fetchDashboardSummary(supabase, user.id);
         if (!active) return;
@@ -77,10 +207,8 @@ export default function DashboardPage() {
     );
 
     advisorData.matches.forEach((match) => {
-      const nameA =
-        companyNameById.get(match.member_a_id) ?? "Verified company";
-      const nameB =
-        companyNameById.get(match.member_b_id) ?? "Verified company";
+      const nameA = companyNameById.get(match.member_a_id) ?? "Verified company";
+      const nameB = companyNameById.get(match.member_b_id) ?? "Verified company";
 
       counts.set(match.member_a_id, (counts.get(match.member_a_id) ?? 0) + 1);
       counts.set(match.member_b_id, (counts.get(match.member_b_id) ?? 0) + 1);
@@ -109,346 +237,142 @@ export default function DashboardPage() {
     const companiesWithoutMatches = advisorData.companies.filter(
       (company) => (counts.get(company.id) ?? 0) === 0,
     );
-
     const companiesWithMatches = advisorData.companies
       .filter((company) => (counts.get(company.id) ?? 0) > 0)
-      .map((company) => ({
-        ...company,
-        matches: matchGroups.get(company.id) ?? [],
-      }));
+      .map((company) => ({ ...company, matches: matchGroups.get(company.id) ?? [] }));
 
-    const pendingPairs = advisorData.matches.filter(
-      (match) => match.status === "pending",
-    ).length;
-    const acceptedPairs = advisorData.matches.filter(
-      (match) => match.status === "accepted",
+    const pendingPairs = advisorData.matches.filter((m) => m.status === "pending").length;
+    const acceptedPairs = advisorData.matches.filter((m) =>
+      ["approved", "accepted", "introduced"].includes(m.status),
     ).length;
 
-    return {
-      totalCompanies: advisorData.companies.length,
-      companiesWithoutMatches,
-      companiesWithMatches,
-      pendingPairs,
-      acceptedPairs,
-    };
+    return { totalCompanies: advisorData.companies.length, companiesWithoutMatches, companiesWithMatches, pendingPairs, acceptedPairs };
   }, [advisorData]);
+
+  // ─── Advisor view ───────────────────────────────────────────────────────────
 
   if (isAdvisorView) {
     return (
-      <div className="min-h-screen bg-(--color-canvas) px-[5%] py-12">
-        <div className="mx-auto w-full max-w-7xl space-y-10">
-          <section className="rounded-[20px] border border-(--color-hairline) bg-(--color-surface-soft) p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-(--color-muted)">
-              Advisor console
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold text-(--color-ink)">
-              Matching visibility
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-(--color-body)">
-              Review which companies have no matches, inspect who is connected
-              to who, and open the particle graph for a visual network view.
-            </p>
-          </section>
+      <div className="min-h-screen bg-[#F7F7F7] px-[5%] py-12">
+        <div className="mx-auto w-full max-w-7xl space-y-8">
 
-          <section className="grid gap-4 md:grid-cols-4">
-            <MetricCard
-              label="Companies"
-              value={
-                isLoading ? "..." : String(advisorDashboard.totalCompanies)
-              }
+          <SystemPulseHeader
+            displayName={displayName}
+            role={role ?? null}
+            urgentCount={advisorDashboard.companiesWithoutMatches.length}
+          />
+
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <AdvisorMetricCard
+              label="Total companies"
+              value={isLoading ? "..." : String(advisorDashboard.totalCompanies)}
+              accent="text-gray-900"
             />
-            <MetricCard
-              label="No matches"
-              value={
-                isLoading
-                  ? "..."
-                  : String(advisorDashboard.companiesWithoutMatches.length)
-              }
+            <AdvisorMetricCard
+              label="Need matching"
+              value={isLoading ? "..." : String(advisorDashboard.companiesWithoutMatches.length)}
+              accent={advisorDashboard.companiesWithoutMatches.length > 0 ? "text-rose-500" : "text-emerald-600"}
+              sub={advisorDashboard.companiesWithoutMatches.length > 0 ? "Require attention" : "All matched"}
             />
-            <MetricCard
+            <AdvisorMetricCard
               label="Pending pairs"
               value={isLoading ? "..." : String(advisorDashboard.pendingPairs)}
+              accent="text-amber-500"
             />
-            <MetricCard
-              label="Accepted pairs"
+            <AdvisorMetricCard
+              label="Approved pairs"
               value={isLoading ? "..." : String(advisorDashboard.acceptedPairs)}
+              accent="text-emerald-600"
+              sub="Approved · accepted · introduced"
+              sparkData={isLoading ? [] : advisorData.sparkData}
+              sparkColor="#10B981"
             />
           </section>
 
-          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <QuickLink
-              href="/advisor/match-queue"
-              title="Match review queue"
-              subtitle="Approve or decline AI-generated matches before members see them"
+          <section className="grid gap-6 lg:grid-cols-3">
+            <UrgencyQueuePanel
+              companies={advisorDashboard.companiesWithoutMatches}
+              isLoading={isLoading}
             />
-            <QuickLink
-              href="/advisor/introductions"
-              title="Introductions"
-              subtitle="Write warm intros for matches both members have accepted"
+            <MatchingFunnelPanel
+              companies={advisorDashboard.companiesWithMatches as CompanyWithMatches[]}
+              isLoading={isLoading}
             />
-            <QuickLink
-              href="/advisor/members"
-              title="Member management"
-              subtitle="View all members, move stages, and manage account status"
-            />
-            <QuickLink
-              href="/advisor/documents"
-              title="Document review"
-              subtitle="Approve or reject Stage 2 KYC submissions"
-            />
-            <QuickLink
-              href="/advisor/manual-match"
-              title="Manual match"
-              subtitle="Create a match between two members directly"
-            />
-            <QuickLink
-              href="/advisor/network-graph"
-              title="Network graph"
-              subtitle="Visualize pending and accepted relationships"
-            />
+            <SectorPieChart companies={advisorData.companies} />
           </section>
 
-          <section className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-[20px] border border-(--color-hairline) bg-(--color-canvas) p-6">
-              <h2 className="text-lg font-semibold text-(--color-ink)">
-                Companies with no matches
-              </h2>
-              <p className="mt-1 text-sm text-(--color-body)">
-                Companies without any match records yet.
-              </p>
-              <div className="mt-4 space-y-3">
-                {advisorDashboard.companiesWithoutMatches.length === 0 ? (
-                  <EmptyState text="Every company currently has at least one match record." />
-                ) : (
-                  advisorDashboard.companiesWithoutMatches.map((company) => (
-                    <CompanyRow key={company.id} company={company} />
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-[20px] border border-(--color-hairline) bg-(--color-canvas) p-6">
-              <h2 className="text-lg font-semibold text-(--color-ink)">
-                Companies matched with who
-              </h2>
-              <p className="mt-1 text-sm text-(--color-body)">
-                Match relationships by company, including status badges.
-              </p>
-              <div className="mt-4 space-y-3">
-                {advisorDashboard.companiesWithMatches.length === 0 ? (
-                  <EmptyState text="No current match relationships found." />
-                ) : (
-                  advisorDashboard.companiesWithMatches.map((company) => (
-                    <MatchGroupCard key={company.id} company={company} />
-                  ))
-                )}
-              </div>
-            </div>
-          </section>
         </div>
       </div>
     );
   }
 
+  // ─── Member view ────────────────────────────────────────────────────────────
+
+  const { percent: profilePercent, nextStep: profileNextStep } =
+    computeProfileStrength(summary.profile);
+
+  const fitData = computeRadarData(summary.recentMatches, user?.id ?? "");
+
+  const activityEvents = matchesToActivityEvents(summary.recentMatches, user?.id ?? "");
+
+  const benchmarkData = [
+    { name: "You",        value: isLoading ? 0 : summary.activeDeals    },
+    { name: "Sector avg", value: isLoading ? 0 : summary.sectorAvgDeals },
+  ];
+
   return (
     <div className="min-h-screen bg-(--color-canvas) px-[5%] py-12">
-      <div className="mx-auto w-full max-w-7xl space-y-10">
+      <div className="mx-auto w-full max-w-7xl space-y-8">
+
+        {/* Greeting */}
         <section className="rounded-[20px] border border-(--color-hairline) bg-(--color-surface-soft) p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-(--color-muted)">
             Member portal
           </p>
           <h1 className="mt-3 text-3xl font-semibold text-(--color-ink)">
-            {summary.profile?.full_name || "Welcome"}
+            Hello,{" "}
+            <span className="text-(--color-primary)">
+              {displayName || summary.profile?.full_name || "there"}
+            </span>
           </h1>
           <p className="mt-2 text-sm text-(--color-body)">
-            Stage {summary.profile?.stage || "0"} · Verification{" "}
+            You're a member at Stage {summary.profile?.stage || "0"} · Verification{" "}
             {summary.profile?.verification_status || "unverified"}
           </p>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-3">
-          <MetricCard
-            label="Pending matches"
-            value={isLoading ? "..." : String(summary.pendingMatches)}
-          />
-          <MetricCard
-            label="Active deals"
-            value={isLoading ? "..." : String(summary.activeDeals)}
-          />
-          <MetricCard
-            label="Ad credits"
-            value={isLoading ? "..." : String(summary.adCredits)}
-          />
+        {/* Row 1: 4 metric cards */}
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCard label="Pending matches" value={isLoading ? "..." : String(summary.pendingMatches)} valueColor="text-amber-500"   />
+          <MetricCard label="Active deals"    value={isLoading ? "..." : String(summary.activeDeals)}    valueColor="text-emerald-600" />
+          <MetricCard label="Ad credits"      value={isLoading ? "..." : String(summary.adCredits)}      valueColor="text-blue-600"    />
+          <BenchmarkingChart data={benchmarkData} label="Active deals" />
         </section>
 
-        <section className="space-y-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-(--color-muted)">
-              Quick actions
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-(--color-ink)">
-              Access key dashboard features
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-(--color-body)">
-              These cards surface the most important member tools and workflows for your current stage.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {role && ["advisor", "admin"].includes(role) ? (
-              <QuickLink
-                href="/advisor/manual-match"
-                title="Advisor tools"
-                subtitle="Curate manual matches and manage advisor workflows"
-              />
-            ) : (
-              <>
-                <InfoCard
-                  title="Matches"
-                  subtitle="Review and respond to current cycle proposals"
-                />
-                <InfoCard
-                  title="Deal board"
-                  subtitle="Keep cards updated within SLA windows"
-                />
-                <InfoCard
-                  title="Profile"
-                  subtitle="Maintain your matching profile and business details"
-                />
-                <InfoCard
-                  title="Documents"
-                  subtitle="Submit and track KYC verification files"
-                />
-                <InfoCard
-                  title="Events"
-                  subtitle="Register and mark attendance for sessions"
-                />
-                <InfoCard
-                  title="Payments"
-                  subtitle="Review billing and credit activity"
-                />
-              </>
-            )}
-          </div>
+        {/* Row 2: Profile strength + Match quality + Activity feed */}
+        <section className="grid gap-6 lg:grid-cols-3">
+          <ProfileStrength
+            percent={isLoading ? 0 : profilePercent}
+            nextStep={profileNextStep}
+          />
+          <MatchFactorsChart fitData={fitData} />
+          <ActivityFeed events={isLoading ? [] : activityEvents} />
         </section>
+
       </div>
     </div>
   );
 }
 
-function CompanyRow({ company }: { company: AdvisorCompanyRecord }) {
-  return (
-    <div className="rounded-[16px] border border-(--color-hairline) bg-(--color-surface-soft) p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-base font-semibold text-(--color-ink)">
-            {company.business_name || company.full_name || "Verified company"}
-          </h3>
-          <p className="mt-1 text-sm text-(--color-body)">
-            {company.sector || "Unspecified sector"} · Stage{" "}
-            {company.stage || "n/a"}
-          </p>
-        </div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-(--color-muted)">
-          {company.verification_status || "unverified"}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function MatchGroupCard({
-  company,
-}: {
-  company: AdvisorCompanyRecord & {
-    matches: Array<{
-      matchId: string;
-      counterpartId: string;
-      counterpartName: string;
-      status: string;
-      fitScore: number | null;
-    }>;
-  };
+function MetricCard({ label, value, valueColor = "text-(--color-primary)" }: {
+  label: string;
+  value: string;
+  valueColor?: string;
 }) {
   return (
-    <div className="rounded-[16px] border border-(--color-hairline) bg-(--color-surface-soft) p-4">
-      <h3 className="text-base font-semibold text-(--color-ink)">
-        {company.business_name || company.full_name || "Verified company"}
-      </h3>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {company.matches.map((match) => (
-          <Link
-            key={match.matchId}
-            href={`/advisor/manual-match/${match.matchId}`}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-90 ${
-              match.status === "accepted"
-                ? "bg-emerald-100 text-emerald-700"
-                : match.status === "pending"
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-slate-100 text-slate-700"
-            }`}
-          >
-            {match.counterpartName} · {match.status}
-            {typeof match.fitScore === "number" ? ` · ${match.fitScore}` : ""}
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas) p-5">
-      <p className="text-xs uppercase tracking-[0.12em] text-(--color-muted)">
-        {label}
-      </p>
-      <p className="mt-2 text-3xl font-semibold text-(--color-primary)">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function QuickLink({
-  href,
-  title,
-  subtitle,
-}: {
-  href: string;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas) p-5 transition hover:border-(--color-border-strong)"
-    >
-      <h2 className="text-base font-semibold text-(--color-ink)">{title}</h2>
-      <p className="mt-2 text-sm text-(--color-body)">{subtitle}</p>
-    </Link>
-  );
-}
-
-function InfoCard({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas) p-5 opacity-80">
-      <h2 className="text-base font-semibold text-(--color-ink)">{title}</h2>
-      <p className="mt-2 text-sm text-(--color-body)">{subtitle}</p>
-    </div>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div className="rounded-[16px] border border-dashed border-(--color-hairline) bg-(--color-surface-soft) p-4 text-sm text-(--color-body)">
-      {text}
+    <div className="rounded-[16px] border border-(--color-hairline) bg-(--color-canvas) px-4 py-3">
+      <p className="text-xs uppercase tracking-[0.12em] text-(--color-muted)">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold ${valueColor}`}>{value}</p>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
 const VALID_ACTIONS = ["approve", "flag", "decline", "introduce"] as const;
@@ -65,7 +66,8 @@ export async function PATCH(
       updates.summary = body.intro_note.trim();
     }
 
-    const { error: updateError } = await supabase
+    const adminClient = createAdminClient();
+    const { error: updateError } = await adminClient
       .from("matches")
       .update(updates)
       .eq("id", matchId);

@@ -124,6 +124,34 @@ export async function fetchAdvisorDashboardData(supabase: SupabaseClient) {
   };
 }
 
+export type DashboardProfile = {
+  full_name: string | null;
+  stage: string | null;
+  verification_status: string | null;
+  business_name: string | null;
+  role_title: string | null;
+  city: string | null;
+  short_bio: string | null;
+  sector: string | null;
+  phone_whatsapp: string | null;
+  ask_categories: string[] | null;
+  offer_categories: string[] | null;
+  asks_summary: string | null;
+  offers_summary: string | null;
+};
+
+export type DashboardMatch = {
+  id: string;
+  member_a_id: string;
+  member_b_id: string;
+  fit_score: number | null;
+  status: string;
+  member_a_status: string;
+  member_b_status: string;
+  created_at: string;
+  counterpart_name: string | null;
+};
+
 export async function fetchDashboardSummary(
   supabase: SupabaseClient,
   userId: string,
@@ -133,6 +161,7 @@ export async function fetchDashboardSummary(
     { count: activeDeals },
     { data: creditRows },
     { data: profile },
+    { data: rawMatches },
   ] = await Promise.all([
     supabase
       .from("matches")
@@ -150,9 +179,17 @@ export async function fetchDashboardSummary(
       .eq("member_id", userId),
     supabase
       .from("profiles")
-      .select("full_name, stage, verification_status")
+      .select(
+        "full_name, stage, verification_status, business_name, role_title, city, short_bio, sector, phone_whatsapp, ask_categories, offer_categories, asks_summary, offers_summary",
+      )
       .eq("id", userId)
       .single(),
+    supabase
+      .from("matches")
+      .select("id, member_a_id, member_b_id, fit_score, status, member_a_status, member_b_status, created_at")
+      .or(`member_a_id.eq.${userId},member_b_id.eq.${userId}`)
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
   const adCredits = (creditRows ?? []).reduce(
@@ -160,12 +197,82 @@ export async function fetchDashboardSummary(
     0,
   );
 
+  // Attach counterpart names to recent matches
+  const matches = rawMatches ?? [];
+  const counterpartIds = [...new Set(matches.map((m) =>
+    m.member_a_id === userId ? m.member_b_id : m.member_a_id,
+  ))];
+
+  let counterpartById = new Map<string, string>();
+  if (counterpartIds.length > 0) {
+    const { data: peers } = await supabase
+      .from("profiles")
+      .select("id, business_name, full_name")
+      .in("id", counterpartIds);
+    counterpartById = new Map(
+      (peers ?? []).map((p) => [p.id, p.business_name || p.full_name || "Verified member"]),
+    );
+  }
+
+  const recentMatches: DashboardMatch[] = matches.map((m) => {
+    const counterpartId = m.member_a_id === userId ? m.member_b_id : m.member_a_id;
+    return { ...m, counterpart_name: counterpartById.get(counterpartId) ?? null };
+  });
+
+  // Sector average active deals
+  let sectorAvgDeals = 0;
+  if (profile?.sector) {
+    const { data: sectorPeers } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("sector", profile.sector)
+      .neq("id", userId)
+      .limit(200);
+
+    if (sectorPeers && sectorPeers.length > 0) {
+      const peerIds = sectorPeers.map((p) => p.id);
+      const { count: sectorDeals } = await supabase
+        .from("deal_cards")
+        .select("id", { count: "exact", head: true })
+        .in("buyer_member_id", peerIds)
+        .not("stage", "in", '("Closed-Won / Pilot Go","Closed-Lost / On Hold")');
+      sectorAvgDeals =
+        Math.round(((sectorDeals ?? 0) / sectorPeers.length) * 10) / 10;
+    }
+  }
+
   return {
     pendingMatches: pendingMatches ?? 0,
     activeDeals: activeDeals ?? 0,
     adCredits,
-    profile: profile ?? null,
+    profile: (profile ?? null) as DashboardProfile | null,
+    recentMatches,
+    sectorAvgDeals,
   };
+}
+
+export async function fetchAdvisorAcceptedByDay(
+  supabase: SupabaseClient,
+): Promise<{ value: number }[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - 6);
+  since.setHours(0, 0, 0, 0);
+
+  const { data } = await supabase
+    .from("matches")
+    .select("created_at")
+    .eq("status", "accepted")
+    .gte("created_at", since.toISOString());
+
+  const counts = new Array(7).fill(0);
+  (data ?? []).forEach((row) => {
+    const dayIndex = Math.floor(
+      (new Date(row.created_at).getTime() - since.getTime()) / 86_400_000,
+    );
+    if (dayIndex >= 0 && dayIndex < 7) counts[dayIndex]++;
+  });
+
+  return counts.map((value) => ({ value }));
 }
 
 export async function fetchUserMatches(

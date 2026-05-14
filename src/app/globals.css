@@ -53,6 +53,10 @@
   --font-display: var(--font-cereal);
 }
 
+.ring-progress {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 body {
   background: var(--color-canvas);
   color: var(--color-ink);

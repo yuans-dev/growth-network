@@ -134,24 +134,34 @@ export default function MatchesPage() {
                 <p className="mt-2 text-sm text-(--color-body)">
                   Counterpart: {match.counterpart_name || "Verified member"}
                 </p>
-                <div className="mt-5 flex gap-3">
-                  <button
-                    disabled={match.status !== "pending" || busyId === match.id}
-                    onClick={() => handleDecision(match, "accepted")}
-                    className="gn-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
-                    type="button"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    disabled={match.status !== "pending" || busyId === match.id}
-                    onClick={() => handleDecision(match, "declined")}
-                    className="gn-btn-secondary disabled:cursor-not-allowed disabled:opacity-50"
-                    type="button"
-                  >
-                    Decline
-                  </button>
-                </div>
+                {(() => {
+                    const myStatus =
+                      match.member_a_id === user?.id
+                        ? match.member_a_status
+                        : match.member_b_status;
+                    const canRespond =
+                      match.status === "approved" && myStatus === "pending";
+                    return (
+                      <div className="mt-5 flex gap-3">
+                        <button
+                          disabled={!canRespond || busyId === match.id}
+                          onClick={() => handleDecision(match, "accepted")}
+                          className="gn-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+                          type="button"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          disabled={!canRespond || busyId === match.id}
+                          onClick={() => handleDecision(match, "declined")}
+                          className="gn-btn-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                          type="button"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    );
+                  })()}
               </div>
             );
           })

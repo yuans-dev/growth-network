@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "../providers";
 import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 import { getSignedInRedirectPath } from "@/lib/auth/access";
+import { FullPageLoader } from "../_components/FullPageLoader";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -14,11 +15,13 @@ export default function SignInPage() {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [loginError, setLoginError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     if (!signedIn) return;
 
     const redirectBasedOnProfile = async () => {
+      setIsRedirecting(true);
       if (isInvitedAccount) {
         router.replace("/accept-invite");
         return;
@@ -81,6 +84,8 @@ export default function SignInPage() {
       return;
     }
 
+    setIsRedirecting(true);
+
     const accountStatus = signedInUser?.user_metadata?.account_status;
     if (accountStatus === "invited") {
       router.push("/accept-invite");
@@ -125,6 +130,10 @@ export default function SignInPage() {
     setLoginData((prev) => ({ ...prev, [field]: value }));
     if (loginError) setLoginError("");
   };
+
+  if (isRedirecting) {
+    return <FullPageLoader message="Signing in…" />;
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-canvas)]">

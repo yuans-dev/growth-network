@@ -39,11 +39,11 @@ export function isPublicPath(pathname: string) {
 
 export function getRoleAccessPrefixes(role: AppRole) {
   if (role === "advisor") {
-    return ["/dashboard", ...ADVISOR_PATH_PREFIXES];
+    return ["/dashboard", ...ADVISOR_PATH_PREFIXES, ...MEMBER_PATH_PREFIXES];
   }
 
   if (role === "admin") {
-    return ["/dashboard", ...ADVISOR_PATH_PREFIXES, ...ADMIN_PATH_PREFIXES];
+    return ["/dashboard", ...ADVISOR_PATH_PREFIXES, ...ADMIN_PATH_PREFIXES, ...MEMBER_PATH_PREFIXES];
   }
 
   return [...MEMBER_PATH_PREFIXES];

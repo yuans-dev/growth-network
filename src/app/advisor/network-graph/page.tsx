@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../providers";
 import { createClient } from "@/lib/supabase/client";
@@ -417,18 +416,6 @@ export default function NetworkGraphPage() {
           />
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2">
-          <QuickLink
-            href="/advisor/manual-match"
-            title="Advisor tools"
-            subtitle="Create or review manual match relationships"
-          />
-          <QuickLink
-            href="/dashboard"
-            title="Company match summary"
-            subtitle="Go back to the advisor dashboard views"
-          />
-        </section>
       </div>
     </div>
   );
@@ -458,24 +445,3 @@ function LegendCard({
   );
 }
 
-function QuickLink({
-  href,
-  title,
-  subtitle,
-}: {
-  href: string;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-[18px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-5 transition hover:border-[var(--color-border-strong)]"
-    >
-      <h2 className="text-base font-semibold text-[var(--color-ink)]">
-        {title}
-      </h2>
-      <p className="mt-2 text-sm text-[var(--color-body)]">{subtitle}</p>
-    </Link>
-  );
-}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
 function canonicalizePair(memberAId: string, memberBId: string) {
@@ -42,7 +43,8 @@ export async function POST(request: Request) {
       created_at: new Date().toISOString(),
     } as any;
 
-    const { error: upsertError } = await supabase
+    const adminClient = createAdminClient();
+    const { error: upsertError } = await adminClient
       .from("matches")
       .upsert([row], { onConflict: "member_a_id,member_b_id" });
 

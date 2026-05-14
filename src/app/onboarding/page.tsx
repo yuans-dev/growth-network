@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "../providers";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { getHomePathForRole } from "@/lib/auth/access";
+import { useAuth } from "../providers";
 
 const sectorOptions = [
   "Fintech",
@@ -58,6 +57,7 @@ export default function OnboardingForm() {
   const router = useRouter();
   const supabase = createClient();
   const { role } = useAuth();
+  const isAdminView = ["advisor", "admin"].includes(role ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -88,10 +88,6 @@ export default function OnboardingForm() {
 
   useEffect(() => {
     let mounted = true;
-    if (role && ["advisor", "staff", "admin"].includes(role)) {
-      router.replace(getHomePathForRole(role));
-      return;
-    }
     (async () => {
       try {
         const { data } = await supabase.auth.getUser();
@@ -229,12 +225,12 @@ export default function OnboardingForm() {
       setLoading(false);
       return;
     }
-    if (form.ask_categories.length === 0) {
+    if (!isAdminView && form.ask_categories.length === 0) {
       setError("Please select at least one ASK category.");
       setLoading(false);
       return;
     }
-    if (form.offer_categories.length === 0) {
+    if (!isAdminView && form.offer_categories.length === 0) {
       setError("Please select at least one OFFER category.");
       setLoading(false);
       return;
@@ -517,89 +513,91 @@ export default function OnboardingForm() {
             </div>
           </div>
 
-          <div>
-            <h3 className="text-sm font-600 text-[var(--color-ink)]">
-              What are you currently looking for? (Pick up to 3)
-            </h3>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              {askCategoryOptions.map((option) => {
-                const selected = form.ask_categories.includes(option);
-                return (
-                  <label
-                    key={option}
-                    className="flex items-start gap-2 text-sm text-[var(--color-body)]"
-                  >
-                    <input
-                      type="checkbox"
-                      className="mt-1"
-                      checked={selected}
-                      onChange={() => toggleCategory("ask_categories", option)}
-                    />
-                    <span>{option}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+          {!isAdminView && (
+            <>
+              <div>
+                <h3 className="text-sm font-600 text-[var(--color-ink)]">
+                  What are you currently looking for? (Pick up to 3)
+                </h3>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {askCategoryOptions.map((option) => {
+                    const selected = form.ask_categories.includes(option);
+                    return (
+                      <label
+                        key={option}
+                        className="flex items-start gap-2 text-sm text-[var(--color-body)]"
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-1"
+                          checked={selected}
+                          onChange={() => toggleCategory("ask_categories", option)}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
 
-          <div>
-            <h3 className="text-sm font-600 text-[var(--color-ink)]">
-              What do you bring to the table? (Pick up to 3)
-            </h3>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
-              {offerCategoryOptions.map((option) => {
-                const selected = form.offer_categories.includes(option);
-                return (
-                  <label
-                    key={option}
-                    className="flex items-start gap-2 text-sm text-[var(--color-body)]"
-                  >
-                    <input
-                      type="checkbox"
-                      className="mt-1"
-                      checked={selected}
-                      onChange={() =>
-                        toggleCategory("offer_categories", option)
-                      }
-                    />
-                    <span>{option}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+              <div>
+                <h3 className="text-sm font-600 text-[var(--color-ink)]">
+                  What do you bring to the table? (Pick up to 3)
+                </h3>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {offerCategoryOptions.map((option) => {
+                    const selected = form.offer_categories.includes(option);
+                    return (
+                      <label
+                        key={option}
+                        className="flex items-start gap-2 text-sm text-[var(--color-body)]"
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-1"
+                          checked={selected}
+                          onChange={() => toggleCategory("offer_categories", option)}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
 
-          <div>
-            <label htmlFor="asks_summary" className="block text-sm font-600 text-[var(--color-ink)]">
-              ASKS summary
-            </label>
-            <p className="text-xs text-[var(--color-muted)]">
-              Describe in 1-2 sentences what you are currently looking for.
-            </p>
-            <textarea
-              id="asks_summary"
-              className="gn-input mt-2 h-28"
-              value={form.asks_summary}
-              onChange={(e) => handleChange("asks_summary", e.target.value)}
-              placeholder="For example: We are looking for strategic advisors and a distribution partner..."
-            />
-          </div>
+              <div>
+                <label htmlFor="asks_summary" className="block text-sm font-600 text-[var(--color-ink)]">
+                  ASKS summary
+                </label>
+                <p className="text-xs text-[var(--color-muted)]">
+                  Describe in 1-2 sentences what you are currently looking for.
+                </p>
+                <textarea
+                  id="asks_summary"
+                  className="gn-input mt-2 h-28"
+                  value={form.asks_summary}
+                  onChange={(e) => handleChange("asks_summary", e.target.value)}
+                  placeholder="For example: We are looking for strategic advisors and a distribution partner..."
+                />
+              </div>
 
-          <div>
-            <label htmlFor="offers_summary" className="block text-sm font-600 text-[var(--color-ink)]">
-              OFFERS summary
-            </label>
-            <p className="text-xs text-[var(--color-muted)]">
-              Describe in 1-2 sentences what you bring to the table.
-            </p>
-            <textarea
-              id="offers_summary"
-              className="gn-input mt-2 h-28"
-              value={form.offers_summary}
-              onChange={(e) => handleChange("offers_summary", e.target.value)}
-              placeholder="For example: We bring enterprise clients, operational expertise, and a strong partner network..."
-            />
-          </div>
+              <div>
+                <label htmlFor="offers_summary" className="block text-sm font-600 text-[var(--color-ink)]">
+                  OFFERS summary
+                </label>
+                <p className="text-xs text-[var(--color-muted)]">
+                  Describe in 1-2 sentences what you bring to the table.
+                </p>
+                <textarea
+                  id="offers_summary"
+                  className="gn-input mt-2 h-28"
+                  value={form.offers_summary}
+                  onChange={(e) => handleChange("offers_summary", e.target.value)}
+                  placeholder="For example: We bring enterprise clients, operational expertise, and a strong partner network..."
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <h3 className="text-sm font-600 text-[var(--color-ink)]">

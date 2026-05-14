@@ -1,21 +1,55 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
-async function assertAdvisorAccess() {
+async function assertAdvisorRole() {
   const supabase = await createClient();
   const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData?.session?.access_token ?? null;
-  const role = getRoleFromAccessToken(accessToken);
+  const role = getRoleFromAccessToken(sessionData?.session?.access_token ?? null);
 
   if (!role || !["advisor", "staff", "admin"].includes(role)) {
-    return {
-      supabase: null,
-      error: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
-    };
+    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
 
-  return { supabase, error: null };
+  return { error: null };
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ matchId: string }> },
+) {
+  try {
+    const { error: authError } = await assertAdvisorRole();
+    if (authError) return authError;
+
+    const { matchId } = await params;
+    const admin = createAdminClient();
+
+    const { data: match, error: matchError } = await admin
+      .from("matches")
+      .select(
+        "id, member_a_id, member_b_id, fit_score, summary, status, member_a_status, member_b_status, created_at, updated_at",
+      )
+      .eq("id", matchId)
+      .single();
+
+    if (matchError || !match) {
+      return NextResponse.json({ error: "Match not found" }, { status: 404 });
+    }
+
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("id, business_name, full_name, sector, stage, verification_status")
+      .in("id", [match.member_a_id, match.member_b_id]);
+
+    return NextResponse.json({ match, profiles: profiles ?? [] });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Unknown" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PATCH(
@@ -23,8 +57,8 @@ export async function PATCH(
   { params }: { params: Promise<{ matchId: string }> },
 ) {
   try {
-    const { supabase, error } = await assertAdvisorAccess();
-    if (error || !supabase) return error;
+    const { error: authError } = await assertAdvisorRole();
+    if (authError) return authError;
 
     const { matchId } = await params;
     const body = await request.json();
@@ -47,7 +81,8 @@ export async function PATCH(
     }
     updates.updated_at = new Date().toISOString();
 
-    const { error: updateError } = await supabase
+    const admin = createAdminClient();
+    const { error: updateError } = await admin
       .from("matches")
       .update(updates)
       .eq("id", matchId);
@@ -70,11 +105,12 @@ export async function DELETE(
   { params }: { params: Promise<{ matchId: string }> },
 ) {
   try {
-    const { supabase, error } = await assertAdvisorAccess();
-    if (error || !supabase) return error;
+    const { error: authError } = await assertAdvisorRole();
+    if (authError) return authError;
 
     const { matchId } = await params;
-    const { error: deleteError } = await supabase
+    const admin = createAdminClient();
+    const { error: deleteError } = await admin
       .from("matches")
       .delete()
       .eq("id", matchId);
