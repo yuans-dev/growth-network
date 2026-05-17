@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateGeminiMatches } from "@/lib/ai/gemini";
 import { getRoleFromAccessToken } from "@/lib/auth/jwt";
 
@@ -114,7 +115,9 @@ export async function POST() {
     console.log("Payload for Gemini:", JSON.stringify(payload, null, 2));
     const recommendations = await generateGeminiMatches(payload);
 
-    await supabase
+    const admin = createAdminClient();
+
+    await admin
       .from("matches")
       .delete()
       .or(`member_a_id.eq.${user.id},member_b_id.eq.${user.id}`)
@@ -138,7 +141,7 @@ export async function POST() {
       );
 
     if (rows.length > 0) {
-      const { error: insertError } = await supabase
+      const { error: insertError } = await admin
         .from("matches")
         .insert(rows);
       if (insertError) {

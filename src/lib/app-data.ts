@@ -158,7 +158,8 @@ export async function fetchDashboardSummary(
 ) {
   const [
     { count: pendingMatches },
-    { count: activeDeals },
+    { count: dealCardCount },
+    { count: acceptedMatchCount },
     { data: creditRows },
     { data: profile },
     { data: rawMatches },
@@ -167,12 +168,17 @@ export async function fetchDashboardSummary(
       .from("matches")
       .select("id", { count: "exact", head: true })
       .or(`member_a_id.eq.${userId},member_b_id.eq.${userId}`)
-      .eq("status", "approved"),
+      .in("status", ["pending", "approved"]),
     supabase
       .from("deal_cards")
       .select("id", { count: "exact", head: true })
       .or(`buyer_member_id.eq.${userId},provider_member_id.eq.${userId}`)
       .not("stage", "in", '("Closed-Won","Closed-Lost / On Hold")'),
+    supabase
+      .from("matches")
+      .select("id", { count: "exact", head: true })
+      .or(`member_a_id.eq.${userId},member_b_id.eq.${userId}`)
+      .in("status", ["accepted", "introduced"]),
     supabase
       .from("ad_credit_ledger")
       .select("change_amount")
@@ -243,7 +249,7 @@ export async function fetchDashboardSummary(
 
   return {
     pendingMatches: pendingMatches ?? 0,
-    activeDeals: activeDeals ?? 0,
+    activeDeals: (dealCardCount ?? 0) + (acceptedMatchCount ?? 0),
     adCredits,
     profile: (profile ?? null) as DashboardProfile | null,
     recentMatches,
@@ -285,7 +291,7 @@ export async function fetchUserMatches(
       "id, member_a_id, member_b_id, fit_score, summary, status, member_a_status, member_b_status, created_at",
     )
     .or(`member_a_id.eq.${userId},member_b_id.eq.${userId}`)
-    .in("status", ["approved", "accepted", "introduced"])
+    .in("status", ["pending", "approved", "accepted", "introduced"])
     .order("created_at", { ascending: false });
 
   if (error || !matches) {

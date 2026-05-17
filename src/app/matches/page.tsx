@@ -5,11 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers";
 import { createClient } from "@/lib/supabase/client";
-import {
-  fetchUserMatches,
-  respondToMatch,
-  type MatchRecord,
-} from "@/lib/app-data";
+import { fetchUserMatches, type MatchRecord } from "@/lib/app-data";
 import { getHomePathForRole } from "@/lib/auth/access";
 
 type UIMatch = MatchRecord & { counterpart_name: string | null };
@@ -43,10 +39,15 @@ export default function MatchesPage() {
   ) => {
     if (!user?.id) return;
     setBusyId(match.id);
-    const { error } = await respondToMatch(supabase, user.id, match, decision);
+    const res = await fetch(`/api/matches/${match.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision }),
+    });
+    const payload = await res.json();
     setBusyId(null);
-    if (error) {
-      window.alert(error);
+    if (!res.ok) {
+      window.alert(payload.error || "Failed to respond to match.");
       return;
     }
     await loadMatches();
@@ -107,7 +108,7 @@ export default function MatchesPage() {
         ) : (
           matches.map((match) => {
             const statusClass =
-              match.status === "accepted"
+              match.status === "accepted" || match.status === "approved"
                 ? "bg-green-100 text-green-700"
                 : match.status === "declined"
                   ? "bg-gray-100 text-gray-700"
@@ -142,7 +143,7 @@ export default function MatchesPage() {
                     const canRespond =
                       match.status === "approved" && myStatus === "pending";
                     return (
-                      <div className="mt-5 flex gap-3">
+                      <div className="mt-5 flex flex-wrap items-center gap-3">
                         <button
                           disabled={!canRespond || busyId === match.id}
                           onClick={() => handleDecision(match, "accepted")}
@@ -159,6 +160,16 @@ export default function MatchesPage() {
                         >
                           Decline
                         </button>
+                        {myStatus === "accepted" && (
+                          <span className="text-sm font-semibold text-green-600">
+                            ✓ You accepted
+                          </span>
+                        )}
+                        {myStatus === "declined" && (
+                          <span className="text-sm font-semibold text-gray-400">
+                            ✕ You declined
+                          </span>
+                        )}
                       </div>
                     );
                   })()}
